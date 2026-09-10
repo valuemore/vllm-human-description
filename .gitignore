@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 연구용 로컬 산출물
+scratch/
+tests/fixtures/*.mp4
+.env
+test-results/
+playwright-report/
