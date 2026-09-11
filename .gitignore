@@ -46,3 +46,6 @@ tests/fixtures/*.mp4
 .env
 test-results/
 playwright-report/
+
+.vercel
+.env*

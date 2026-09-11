@@ -5,7 +5,7 @@ import { getEnv } from "@/lib/env";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** Vercel Cron (5분): 클라이언트가 사라진 만료 관찰을 timeout 제출로 마감한다. */
+/** Vercel Cron(스케줄은 vercel.json; Hobby 플랜은 매일 1회 제한): 클라이언트가 사라진 만료 관찰을 timeout 제출로 마감한다. 참여자 요청 경로에서는 즉시 마감되므로 이 잡은 안전망이다. */
 export const GET = handle(async (req: Request) => {
   const secret = getEnv().CRON_SECRET;
   const auth = req.headers.get("authorization");

@@ -41,7 +41,7 @@ npm run seed                          # 환경변수는 .env.local 대신 운영
 # 4) Vercel
 vercel link
 vercel env add ...                    # 위 표의 변수 전부 (Production/Preview)
-vercel deploy --prod                  # vercel.json 의 cron(*/5 * * * *) 자동 등록
+vercel deploy --prod                  # vercel.json 의 cron 자동 등록 (Hobby: 매일 1회 `0 18 * * *`=03:00 KST, Pro 이상: `*/5 * * * *` 권장)
 ```
 
 Supabase 대시보드에서 확인할 것:
@@ -67,7 +67,7 @@ Supabase 대시보드에서 확인할 것:
 | 참여자가 PIN 을 잊음 | `/admin/participants/[id]` → PIN 재설정 (기존 세션 종료, 새 PIN 1회 표시) |
 | 네트워크 단절·영상 오류로 기록 손상 | `/admin/observations/[id]` → 사유 입력 후 **무효화 + 새 attempt 생성**. 원문·이벤트는 보존 |
 | 중도탈락 | `/admin/participants/[id]` → 참여 중단(withdrawn). 같은 순서그룹에 대체 참여자 생성 시 "대체 대상" 선택 |
-| 진행 중 관찰이 만료된 채 남음 | 참여자 재접속 시 또는 5분 cron 이 자동으로 timeout 제출. 대시보드 "진행 중인 관찰" 표에서 확인 |
+| 진행 중 관찰이 만료된 채 남음 | 참여자 재접속 시 즉시, 그 외에는 cron(Hobby 플랜 매일 1회, Pro 5분)이 timeout 제출. 대시보드 "진행 중인 관찰" 표에서 확인 |
 | 대시보드 확인 사항 | 등록/완료/진행/미시작, 유효 기록 `x / P×N`, 영상별 `x / P`, 그룹별 `x / ceil(P/N)`, 균형 검증 PASS, 기술오류 참여자 |
 | 수집 완료 | 대시보드에 `DATA COLLECTION COMPLETE` 배지 |
 

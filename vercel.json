@@ -1,3 +1,3 @@
 {
-  "crons": [{ "path": "/api/cron/finalize-timeouts", "schedule": "*/5 * * * *" }]
+  "crons": [{ "path": "/api/cron/finalize-timeouts", "schedule": "0 18 * * *" }]
 }
