@@ -21,7 +21,8 @@
     "seed:participants": "tsx scripts/seed-participants.ts",
     "seed:test": "tsx scripts/seed-test-study.ts",
     "create:admin": "tsx scripts/create-admin.ts",
-    "make:test-video": "tsx scripts/make-test-video.ts"
+    "make:test-video": "tsx scripts/make-test-video.ts",
+    "videos:probe": "tsx scripts/probe-video-audio.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

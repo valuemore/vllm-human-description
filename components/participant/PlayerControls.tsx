@@ -9,7 +9,6 @@ type Props = {
   currentMs: number;
   durationMs: number;
   muted: boolean;
-  hasAudio: boolean;
   fullscreen: boolean;
   onPlay: () => void;
   onPause: () => void;
@@ -20,7 +19,7 @@ type Props = {
   onToggleFullscreen: () => void;
 };
 
-/** 자유 시청 컨트롤. 배속 UI 는 두지 않는다 (playback rate 1.0 고정). */
+/** 자유 시청 컨트롤. 배속 UI 는 두지 않는다 (playback rate 1.0 고정). 소리 버튼은 has_audio 메타와 무관하게 항상 둔다 (메타 오감지로 소리 조절이 사라지지 않도록). */
 export function PlayerControls(p: Props) {
   const c = copy.observation.controls;
   const btn = "inline-flex size-10 items-center justify-center rounded-md bg-white/90 text-neutral-800 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500";
@@ -52,11 +51,9 @@ export function PlayerControls(p: Props) {
       <span className="font-mono text-sm tabular-nums" aria-hidden="true">
         {c.time(formatClock(p.currentMs / 1000), formatClock(p.durationMs / 1000))}
       </span>
-      {p.hasAudio && (
-        <button type="button" className={btn} onClick={p.onToggleMute} aria-label={p.muted ? c.unmute : c.mute} aria-pressed={p.muted}>
-          {p.muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
-        </button>
-      )}
+      <button type="button" className={btn} onClick={p.onToggleMute} aria-label={p.muted ? c.unmute : c.mute} aria-pressed={p.muted} title={p.muted ? c.unmute : c.mute}>
+        {p.muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
+      </button>
       <button type="button" className={btn} onClick={p.onToggleFullscreen} aria-label={p.fullscreen ? c.exitFullscreen : c.fullscreen}>
         {p.fullscreen ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
       </button>

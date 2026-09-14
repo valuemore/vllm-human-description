@@ -254,7 +254,6 @@ export function ObservationShell({ snapshot, mode }: { snapshot: ObservationSnap
         dispatch={dispatch}
         markUserSeek={markUserSeek}
         handlers={handlers}
-        hasAudio={snapshot.video.hasAudio}
         watermark={snapshot.settings.watermarkEnabled ? c.watermark(snapshot.settings.participantCode) : null}
         urlError={video.error}
         onRetry={() => {

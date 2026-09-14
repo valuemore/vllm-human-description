@@ -17,7 +17,6 @@ type Props = {
   dispatch: (a: PlayerAction) => void;
   markUserSeek: (source: "slider" | "skip_button" | "keyboard" | "restart_button") => void;
   handlers: Record<string, () => void>;
-  hasAudio: boolean;
   watermark: string | null;
   onRetry: () => void;
   urlError: string | null;
@@ -188,7 +187,6 @@ export function StudyVideoPlayer(p: Props) {
           currentMs={currentMs}
           durationMs={state.durationMs}
           muted={muted}
-          hasAudio={p.hasAudio}
           fullscreen={fullscreen}
           onPlay={() => dispatch({ type: "USER_PLAY" })}
           onPause={() => dispatch({ type: "USER_PAUSE" })}
