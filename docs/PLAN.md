@@ -74,7 +74,7 @@ PRD가 요구하는 것은 일반 설문앱이 아니라 **연구조건을 시�
 - **study_settings**: 변경이력 append-only(setting_key, old/new jsonb, changed_by, reason).
 - **admin_users**: id = auth.users.id, email, role(admin/coder), active.
 - **audit_logs**: §39 필드 + ip, user_agent. append-only.
-- **videos**: §28 필드 + `kind, mime_type, file_size_bytes, age_group, sort_order`. `UNIQUE(study_id, code)`, 활성 연습영상 1편 부분 UNIQUE, 연구영상 duration 30~60s CHECK(NULL 허용).
+- **videos**: §28 필드 + `kind, mime_type, file_size_bytes, age_group, sort_order`. `UNIQUE(study_id, code)`, 활성 연습영상 1편 부분 UNIQUE, 연구영상 duration 은 `lib/video-limits.ts` 기준 최대 90s(업로드 finalize 에서 거부), 30s 미만은 관리자 경고만(DB 는 `> 0` CHECK, NULL 허용).
 - **order_groups**(code `O1..ON`, `group_index`, `target_participants` = ceil(P/N) 저장값, `generation int` 재생성 세대) / **order_group_items**(position ≥1, video_id; `UNIQUE(group,position)`, `UNIQUE(group,video)`; position ≤ N은 트리거 `check_position_in_range`로 study 설정과 비교).
 - **participants**: code, pin_hash, order_group_id NOT NULL, status, `is_valid`, `replaced_participant_id`, `guide_acknowledged_at`, practice_completed_at/started_at/completed_at/last_seen_at, failed_pin_attempts/locked_until, device/browser_category, user_agent_first, notes_admin. `UNIQUE(study_id, participant_code)`.
 - **participant_sessions**: sid, participant_id, issued/expires/revoked_at, ip, ua.

@@ -4,6 +4,7 @@ import { VideoUploader } from "@/components/admin/VideoUploader";
 import { Notice, PageHeader, Section, Table, Td } from "@/components/admin/ui";
 import { getCurrentStudy, getTargets } from "@/lib/services/admin/study";
 import { listVideos } from "@/lib/services/admin/videos";
+import { formatDurationKo, isOutsideRecommendedRange, MAX_RESEARCH_VIDEO_MS, MIN_RESEARCH_VIDEO_MS } from "@/lib/video-limits";
 import { createVideoAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,11 @@ export default async function VideosPage() {
       <PageHeader title="영상 관리" description={`연구영상 ${research.length} / ${targets.video_count}편 (파일 등록 ${research.filter((v) => v.storage_path).length}) · Private Storage · signed URL 전용`} />
       {research.length !== targets.video_count && !locked && <Notice tone="warn">활성 연구영상 수가 설정 편수({targets.video_count})와 다릅니다. 맞춘 뒤 순서그룹을 재생성하세요.</Notice>}
       {locked && <Notice tone="info">구조 잠김: 연구영상 추가·비활성은 불가합니다. 메타데이터 수정과 연습영상 관리는 가능합니다.</Notice>}
-      {research.some((v) => v.duration_ms && (v.duration_ms < 30000 || v.duration_ms > 60000)) && <Notice tone="warn">30~60초 범위를 벗어난 연구영상이 있습니다 (PRD 권장 길이).</Notice>}
+      {research.some((v) => v.duration_ms && isOutsideRecommendedRange(v.duration_ms)) && (
+        <Notice tone="warn">
+          {formatDurationKo(MIN_RESEARCH_VIDEO_MS)}~{formatDurationKo(MAX_RESEARCH_VIDEO_MS)} 범위를 벗어난 연구영상이 있습니다 (권장 길이, 최대 {formatDurationKo(MAX_RESEARCH_VIDEO_MS)}).
+        </Notice>
+      )}
 
       <Section title="영상 등록 (placeholder → 파일 업로드)">
         <ActionForm action={createVideoAction} submitLabel="등록">

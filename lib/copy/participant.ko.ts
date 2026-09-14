@@ -2,6 +2,8 @@
  * 참여자 화면 문구 모음 (PRD §8, §10, §40, §52).
  * 연구 지표·내부 영상코드·가설은 여기에 쓰지 않는다 (check:forbidden 이 검출).
  */
+import { formatDurationKo, MAX_RESEARCH_VIDEO_MS } from "@/lib/video-limits";
+
 export const copy = {
   app: {
     title: "영유아 관찰기록 연구",
@@ -34,7 +36,7 @@ export const copy = {
     lead: "짧은 영유아 활동영상을 관찰하고 평소 어린이집에서 기록하시는 방식으로 관찰내용을 작성하게 됩니다.",
     bullets: (n: number, minutes: number, totalMinutes: number) => [
       `총 ${n}개의 영상을 관찰합니다.`,
-      "각 영상은 1분 이내입니다.",
+      `각 영상은 ${formatDurationKo(MAX_RESEARCH_VIDEO_MS)} 이내입니다.`,
       `영상 한 편당 최대 ${minutes}분이 주어집니다.`,
       `전체 본 관찰은 최대 약 ${totalMinutes}분입니다.`,
       "정답을 맞히는 시험이 아닙니다.",

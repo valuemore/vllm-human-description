@@ -3,6 +3,7 @@ import { getServiceClient } from "@/lib/db/service-client";
 import { AppError, fromDbError } from "@/lib/errors";
 import { VIDEO_BUCKET } from "@/lib/services/videos";
 import { recordAudit } from "@/lib/services/admin/audit";
+import { exceedsResearchVideoMax, formatDurationKo, MAX_RESEARCH_VIDEO_MS } from "@/lib/video-limits";
 import type { Database } from "@/types/database";
 
 export type VideoRow = Database["public"]["Tables"]["videos"]["Row"];
@@ -81,6 +82,12 @@ export async function finalizeUpload(
 ) {
   const sb = getServiceClient();
   const video = await getVideo(videoId);
+  if (video.kind === "research" && exceedsResearchVideoMax(meta.durationMs)) {
+    throw new AppError(
+      "VALIDATION",
+      `연구영상은 최대 ${formatDurationKo(MAX_RESEARCH_VIDEO_MS)}까지 허용됩니다 (업로드 파일 ${(meta.durationMs / 1000).toFixed(1)}초). 파일을 편집한 뒤 다시 업로드하세요.`,
+    );
+  }
   const path = storagePathFor(video);
   // 객체 존재 확인
   const dir = path.slice(0, path.lastIndexOf("/"));
