@@ -5,10 +5,10 @@ import { ApiClientError, apiPut } from "@/lib/client/api";
 import { AUTOSAVE_DEBOUNCE_MS, AUTOSAVE_MAX_WAIT_MS, backoffDelay, reconcileDraft, type AutosaveStatus } from "@/lib/autosave/draftReconcile";
 import { localDraftStore } from "@/lib/autosave/localDraftStore";
 
-export type DraftSaveResponse = { savedRevision: number; timer: { remainingSeconds: number } };
+export type DraftSaveResponse = { savedRevision: number; timer: { remainingSeconds: number | null } };
 
 export type AutosaveHandlers = {
-  onServerTimer: (remainingSeconds: number) => void;
+  onServerTimer: (remainingSeconds: number | null) => void;
   onTimedOut: () => void;
   onSessionExpired: () => void;
 };

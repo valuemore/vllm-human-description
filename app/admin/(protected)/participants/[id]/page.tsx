@@ -51,6 +51,8 @@ export default async function ParticipantDetailPage({ params }: { params: Promis
             <dd>{fmtDate(p.practice_completed_at)}</dd>
             <dt className="text-muted-foreground">본 관찰 시작</dt>
             <dd>{fmtDate(p.started_at)}</dd>
+            <dt className="text-muted-foreground">전체 마감</dt>
+            <dd>{fmtDate(p.main_deadline_at)}</dd>
             <dt className="text-muted-foreground">완료</dt>
             <dd>{fmtDate(p.completed_at)}</dd>
             <dt className="text-muted-foreground">기기/브라우저</dt>

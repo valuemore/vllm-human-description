@@ -46,7 +46,7 @@ export async function getDashboard(studyId: string) {
     sb.from("v_video_progress").select("*").eq("study_id", studyId).order("sort_order"),
     sb.from("v_order_group_balance").select("*").eq("study_id", studyId).order("group_index"),
     sb.from("v_order_balance_check").select("*").eq("study_id", studyId),
-    sb.from("v_observation_metrics").select("observation_id, participant_code, video_code, presentation_order, remaining_seconds, started_at").eq("study_id", studyId).eq("status", "in_progress").order("started_at"),
+    sb.from("v_observation_metrics").select("observation_id, participant_code, video_code, presentation_order, remaining_seconds, limit_kind, started_at").eq("study_id", studyId).eq("status", "in_progress").order("started_at"),
     sb.from("v_participant_progress").select("participant_id, participant_code, order_group, status, has_technical_issue").eq("study_id", studyId).eq("has_technical_issue", true).order("participant_code"),
   ]);
   if (kpi.error) throw fromDbError(kpi.error);
@@ -54,7 +54,7 @@ export async function getDashboard(studyId: string) {
 }
 
 export const SETTING_KEYS = [
-  "name", "participant_target", "research_video_count", "max_observation_seconds", "first_watch_seek_enabled", "first_watch_pause_enabled",
+  "name", "participant_target", "research_video_count", "max_observation_seconds", "total_time_limit_seconds", "first_watch_seek_enabled", "first_watch_pause_enabled",
   "first_watch_text_enabled", "replay_enabled", "playback_rate", "practice_video_id", "ai_runs_per_video", "mobile_allowed", "timer_mode",
   "watermark_enabled", "consent_version", "security_notice_version",
 ] as const;

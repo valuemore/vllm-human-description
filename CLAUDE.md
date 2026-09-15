@@ -34,12 +34,18 @@ For each research video:
 5. keep the text area disabled until first viewing completes,
 6. then allow replay, pause, and seeking,
 7. keep playback speed fixed at 1.0,
-8. allow a maximum of 300 seconds (study setting),
+8. enforce the study's time limit (study settings, amended 2026-09-15 by researcher instruction):
+   - `max_observation_seconds` = per-video limit, nullable (currently NULL = no per-video limit),
+   - `total_time_limit_seconds` = participant-wide limit across all research videos, wall time,
+     starting at the first playback of the first research video (currently 2400 s = 40 min),
+   - at the total deadline the in-progress observation is auto-submitted; remaining videos may
+     still be completed without a time limit and are flagged `started_after_total_deadline`,
 9. allow early manual submission,
 10. autosubmit the saved response at timeout,
 11. preserve all raw interaction events.
 
 Never reset an experimental timer because of browser refresh.
+Never move a participant's total deadline (`participants.main_deadline_at`) once set.
 Never overwrite or delete submitted raw research records.
 Invalid records must be flagged and replaced with a new attempt.
 Never expose child observation videos via public URLs.

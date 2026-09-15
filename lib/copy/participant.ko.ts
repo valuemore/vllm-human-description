@@ -4,6 +4,21 @@
  */
 import { formatDurationKo, MAX_RESEARCH_VIDEO_MS } from "@/lib/video-limits";
 
+/** 연구 설정에서 파생한 시간 제한 안내값 (분). null = 해당 제한 없음 */
+export type TimeLimits = { perVideoMinutes: number | null; totalMinutes: number | null };
+
+/** 시간 제한 설정에 따라 참여자 안내 문장을 만든다 */
+export function timeLimitLines(l: TimeLimits): string[] {
+  const lines: string[] = [];
+  if (l.perVideoMinutes !== null) lines.push(`영상 한 편당 최대 ${l.perVideoMinutes}분이 주어지며, 영상이 처음 재생되는 순간부터 시작됩니다.`);
+  if (l.totalMinutes !== null) {
+    lines.push(`전체 본 관찰에 최대 ${l.totalMinutes}분이 주어집니다. 첫 번째 영상이 처음 재생되는 순간부터 시작되어 모든 영상에 걸쳐 계속 흐릅니다.`);
+    lines.push("전체 제한시간이 끝나면 작성 중인 기록은 자동으로 제출되고, 남은 영상은 시간 제한 없이 이어서 진행할 수 있습니다.");
+  }
+  if (l.perVideoMinutes === null && l.totalMinutes === null) lines.push("작성 시간에 제한은 없습니다.");
+  return lines;
+}
+
 export const copy = {
   app: {
     title: "영유아 관찰기록 연구",
@@ -34,11 +49,10 @@ export const copy = {
   welcome: {
     title: "영유아 관찰기록 연구에 참여해 주셔서 감사합니다.",
     lead: "짧은 영유아 활동영상을 관찰하고 평소 어린이집에서 기록하시는 방식으로 관찰내용을 작성하게 됩니다.",
-    bullets: (n: number, minutes: number, totalMinutes: number) => [
+    bullets: (n: number, limits: TimeLimits) => [
       `총 ${n}개의 영상을 관찰합니다.`,
       `각 영상은 ${formatDurationKo(MAX_RESEARCH_VIDEO_MS)} 이내입니다.`,
-      `영상 한 편당 최대 ${minutes}분이 주어집니다.`,
-      `전체 본 관찰은 최대 약 ${totalMinutes}분입니다.`,
+      ...timeLimitLines(limits),
       "정답을 맞히는 시험이 아닙니다.",
       "평소 관찰기록을 작성하듯 자연스럽게 기록해 주세요.",
     ],
@@ -56,7 +70,9 @@ export const copy = {
   },
   consent: {
     title: "연구 참여 및 영상 보안 동의",
-    lead: "아래 내용을 읽고 모두 동의하시면 다음으로 진행됩니다.",
+    lead: "아래 내용을 읽고 세 항목에 모두 체크하신 뒤 [동의하고 계속하기] 버튼을 눌러 주세요.",
+    checkHint: "각 항목 앞의 네모 칸을 눌러 체크해 주세요. 항목 문장을 눌러도 체크됩니다.",
+    incomplete: "아직 체크되지 않은 항목이 있습니다. 세 항목에 모두 체크해 주셔야 다음으로 진행할 수 있습니다.",
     securityTitle: "연구영상 보안 안내",
     securityBody:
       "연구영상에는 실제 어린이집 영유아가 등장합니다. 영상은 연구 참여 화면에서만 재생되며, 어떤 방식으로도 저장·복제·공유하지 않아야 합니다.",
@@ -120,9 +136,9 @@ export const copy = {
       "영상에서 실제로 관찰한 내용을 중심으로 평소 관찰기록을 작성하듯 기록해 주세요.",
       "충분히 작성했다고 생각되면 제한시간 이전에도 제출할 수 있습니다.",
     ],
-    notes: (minutes: number) => [
+    notes: (limits: TimeLimits) => [
       "처음 시청 중에는 영상을 멈추거나 되감을 수 없습니다. 첫 시청이 끝나면 기록창이 열립니다.",
-      `제한시간 ${minutes}분은 영상이 처음 재생되는 순간부터 시작됩니다.`,
+      ...timeLimitLines(limits),
       "작성 중인 내용은 자동으로 저장됩니다. 제출한 뒤에는 수정할 수 없습니다.",
     ],
     startPractice: "연습 시작하기",
@@ -139,7 +155,11 @@ export const copy = {
     ordinal: (n: number) => ["첫", "두", "세", "네", "다섯", "여섯", "일곱", "여덟", "아홉", "열"][n - 1] ?? `${n}`,
     start: (n: number) => `${copy.hub.ordinal(n)} 번째 관찰 시작하기`,
     lead: (total: number) => `총 ${total}개의 영상을 순서대로 관찰합니다.`,
-    note: "시작 버튼을 누르면 영상이 준비된 뒤 시청 시작 버튼이 나타납니다. 제한시간은 영상이 재생되는 순간부터 시작됩니다.",
+    note: "시작 버튼을 누르면 영상이 준비된 뒤 시청 시작 버튼이 나타납니다.",
+    totalNotStarted: (minutes: number) => `전체 제한시간 ${minutes}분은 첫 번째 영상이 재생되는 순간부터 시작되며, 모든 영상에 걸쳐 계속 흐릅니다.`,
+    totalRemaining: (clock: string) => `전체 남은 시간: ${clock}`,
+    totalRemainingHint: "다음 영상을 시작하기 전에도 시간은 계속 줄어듭니다.",
+    totalExpired: "전체 제한시간이 지났습니다. 남은 영상은 시간 제한 없이 계속 진행할 수 있습니다.",
     afterPractice: "연습이 끝났습니다. 이제 본 관찰을 시작합니다.",
     empty: "배정된 관찰이 없습니다. 연구자에게 문의해 주세요.",
   },
@@ -147,6 +167,8 @@ export const copy = {
     label: (n: number, total: number) => `관찰 ${n} / ${total}`,
     timer: {
       label: "남은 시간",
+      labelTotal: "전체 남은 시간",
+      noLimit: "제한시간 없음",
       oneMinute: "1분 남음",
       thirty: "곧 종료됩니다",
       ten: "자동 제출됩니다",
@@ -155,9 +177,9 @@ export const copy = {
     preparing: "영상을 준비하고 있습니다…",
     preloadSlow: "영상 준비가 평소보다 오래 걸리고 있습니다. 네트워크 상태를 확인해 주세요.",
     startWatch: "시청 시작",
-    startHint: "시청 시작을 누르면 제한시간이 시작됩니다. 첫 시청 중에는 멈추거나 되감을 수 없습니다.",
+    startHint: "첫 시청 중에는 멈추거나 되감을 수 없습니다.",
     restartTitle: "이전 시청이 중단되었습니다.",
-    restartBody: "영상을 처음부터 다시 시청합니다. 남은 시간은 계속 줄어듭니다.",
+    restartBody: "영상을 처음부터 다시 시청합니다. 제한시간이 있는 경우 남은 시간은 계속 줄어듭니다.",
     restart: "다시 시청하기",
     firstWatching: "첫 시청 중입니다. 시청이 끝나면 기록창이 열립니다.",
     firstWatchDone: "첫 시청이 끝났습니다. 이제 관찰기록을 작성할 수 있습니다.",

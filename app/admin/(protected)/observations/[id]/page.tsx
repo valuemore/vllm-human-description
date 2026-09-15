@@ -43,7 +43,7 @@ export default async function ObservationDetailPage({ params }: { params: Promis
           무효화됨 ({fmtDate(row.invalidated_at)}): {m.invalidated_reason}
         </Notice>
       )}
-      {m.status === "in_progress" && Number(m.remaining_seconds) <= 0 && <Notice tone="warn">서버 기준 만료된 진행 중 관찰입니다. 다음 참여자 요청 또는 cron 에서 timeout 제출로 마감됩니다.</Notice>}
+      {m.status === "in_progress" && m.remaining_seconds !== null && Number(m.remaining_seconds) <= 0 && <Notice tone="warn">서버 기준 만료된 진행 중 관찰입니다. 다음 참여자 요청 또는 cron 에서 timeout 제출로 마감됩니다.</Notice>}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Section title="영상">

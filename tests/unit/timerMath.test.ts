@@ -30,6 +30,7 @@ describe("timerLevel / formatClock", () => {
     expect(timerLevel(10)).toBe("warn10");
     expect(timerLevel(0)).toBe("expired");
     expect(timerLevel(-5)).toBe("expired");
+    expect(timerLevel(null)).toBe("normal"); // 제한 없음
   });
   it("mm:ss (올림, 음수 클램프)", () => {
     expect(formatClock(222)).toBe("03:42");

@@ -19,7 +19,7 @@ import { classifyBrowser, resolveDevice } from "@/lib/participant/device";
 import { editorEnabled } from "@/lib/player/playerMachine";
 import type { ObservationSnapshot } from "@/lib/services/observations";
 
-type TimerPayload = { remainingSeconds: number };
+type TimerPayload = { remainingSeconds: number | null };
 type StartResponse = { startedAt: string; timer: TimerPayload };
 type FirstWatchResponse = { accepted: boolean; timer: TimerPayload };
 type ClockResponse = { status: string; submissionType: string | null; timer: TimerPayload };
@@ -48,7 +48,13 @@ export function ObservationShell({ snapshot, mode }: { snapshot: ObservationSnap
   const videoCallbacks = useRef<VideoPhaseCallbacks | null>(null);
 
   const timer = useObservationTimer(
-    { remainingSeconds: snapshot.timer.remainingSeconds, maxSeconds: snapshot.timer.maxSeconds, timerMode: snapshot.timer.timerMode, startedAt: snapshot.startedAt },
+    {
+      remainingSeconds: snapshot.timer.remainingSeconds,
+      maxSeconds: snapshot.timer.maxSeconds,
+      timerMode: snapshot.timer.timerMode,
+      startedAt: snapshot.startedAt,
+      limitKind: snapshot.timer.limitKind,
+    },
     timerHandlers,
   );
   const { logger } = useEventLogger(snapshot.id, loggerHandler);
@@ -77,8 +83,8 @@ export function ObservationShell({ snapshot, mode }: { snapshot: ObservationSnap
     if (err.code === "UNAUTHENTICATED") setSessionExpired(true);
     else if (err.code === "TIMED_OUT" || err.code === "ALREADY_SUBMITTED") void resync();
     else if (err.code === "TOO_EARLY_FOR_TIMEOUT") {
-      const d = err.details as { remainingSeconds?: number } | undefined;
-      if (d?.remainingSeconds !== undefined) timer.applyAnchor(d.remainingSeconds);
+      const d = err.details as { remainingSeconds?: number | null } | undefined;
+      if (d && d.remainingSeconds !== undefined) timer.applyAnchor(d.remainingSeconds);
     }
   };
 
@@ -239,7 +245,7 @@ export function ObservationShell({ snapshot, mode }: { snapshot: ObservationSnap
         <h1 className="text-xl font-semibold" tabIndex={-1}>
           {label}
         </h1>
-        <TimerDisplay remaining={timer.remaining} level={timer.level} started={timer.started} maxSeconds={timer.maxSeconds} />
+        <TimerDisplay remaining={timer.remaining} level={timer.level} limitKind={timer.limitKind} />
       </header>
       {mode === "practice" && (
         <p className="mb-4 rounded-lg bg-sky-50 px-4 py-2 text-sky-900" role="note">

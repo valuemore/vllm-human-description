@@ -56,6 +56,7 @@ export const DATASETS: Dataset[] = [
       { key: "guide_acknowledged_at", type: "timestamp", description: "안내 확인 시각" },
       { key: "practice_completed_at", type: "timestamp", description: "연습 완료 시각" },
       { key: "started_at", type: "timestamp", description: "본 관찰 시작 시각" },
+      { key: "main_deadline_at", type: "timestamp", description: "전체 제한시간 마감 (첫 본 관찰 시작 + total_time_limit_seconds)" },
       { key: "completed_at", type: "timestamp", description: "완료 시각" },
       { key: "device_category", type: "string", description: "기기 분류", values: "desktop|mobile|tablet|unknown" },
       { key: "browser_category", type: "string", description: "브라우저 분류" },
@@ -171,6 +172,9 @@ export const DATASETS: Dataset[] = [
       { key: "page_hidden_seconds", type: "number", description: "페이지 이탈 시간" },
       { key: "submission_type", type: "string", description: "제출 유형", values: "manual|timeout" },
       { key: "timed_out", type: "boolean", description: "timeout 여부" },
+      { key: "main_deadline_at", type: "timestamp", description: "참여자 전체 제한시간 마감" },
+      { key: "started_after_total_deadline", type: "boolean", description: "전체 제한시간이 지난 뒤 시작한 관찰 (시간 제한 없이 진행)" },
+      { key: "seconds_since_participant_start", type: "number", description: "참여자 본 관찰 시작 → 이 관찰 시작 (초)" },
       { key: "observation_text", type: "text", description: "교사 원문 (불변)" },
       { key: "character_count", type: "integer", description: "글자 수 (공백 제외)" },
       { key: "word_count", type: "integer", description: "단어 수" },
@@ -184,7 +188,7 @@ export const DATASETS: Dataset[] = [
     query: async (sb, s) => {
       const rows = await paged((f, t) => sb.from("v_research_master").select("*").eq("study_id", s).order("participant_code").order("presentation_order").order("attempt_number").range(f, t));
       const pending = await paged((f, t) => sb.from("v_observation_metrics").select("*").eq("study_id", s).eq("is_practice", false).in("status", ["pending", "in_progress"]).range(f, t));
-      return [...rows, ...pending.map((p) => ({ ...p, is_valid_record: false }))];
+      return [...rows, ...pending.map((p) => ({ ...p, is_valid_record: false, main_deadline_at: p.total_deadline_at, seconds_since_participant_start: null }))];
     },
   },
   {
@@ -381,6 +385,9 @@ export const DATASETS: Dataset[] = [
       { key: "pause_count", type: "integer", description: "pause" },
       { key: "seek_count", type: "integer", description: "seek" },
       { key: "submission_type", type: "string", description: "manual|timeout" },
+      { key: "timed_out", type: "boolean", description: "timeout 여부" },
+      { key: "started_after_total_deadline", type: "boolean", description: "전체 제한시간 이후 시작 (시간 제한 없이 진행)" },
+      { key: "seconds_since_participant_start", type: "number", description: "참여자 본 관찰 시작 → 이 관찰 시작 (초)" },
       { key: "observation_text", type: "text", description: "원문" },
       { key: "character_count", type: "integer", description: "글자 수" },
       { key: "word_count", type: "integer", description: "단어 수" },

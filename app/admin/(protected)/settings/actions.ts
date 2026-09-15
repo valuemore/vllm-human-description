@@ -8,11 +8,14 @@ import { AppError } from "@/lib/errors";
 import { getCurrentStudy, setStatus, updateSettings } from "@/lib/services/admin/study";
 
 const boolStr = z.enum(["true", "false"]).transform((v) => v === "true");
+/** 빈 문자열 = 제한 없음(null) */
+const optionalSeconds = (min: number, max: number) => z.preprocess((v) => (v === "" ? null : v), z.coerce.number().int().min(min).max(max).nullable());
 const patchSchema = z.object({
   name: z.string().trim().min(1).optional(),
   participant_target: z.coerce.number().int().min(1).optional(),
   research_video_count: z.coerce.number().int().min(2).max(20).optional(),
-  max_observation_seconds: z.coerce.number().int().min(30).max(3600).optional(),
+  max_observation_seconds: optionalSeconds(30, 3600).optional(),
+  total_time_limit_seconds: optionalSeconds(60, 86400).optional(),
   timer_mode: z.enum(["wall_time", "effective_time"]).optional(),
   first_watch_seek_enabled: boolStr.optional(),
   first_watch_pause_enabled: boolStr.optional(),

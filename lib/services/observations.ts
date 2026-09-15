@@ -4,7 +4,7 @@ import { AppError, fromDbError } from "@/lib/errors";
 import { assertOwnership, type ParticipantContext } from "@/lib/auth/participant";
 import { loadParticipantSnapshot } from "@/lib/participant/snapshot";
 import { activeMainObservations, resolveNextStep, type ParticipantStep } from "@/lib/participant/resolveNextStep";
-import { TIMEOUT_TOLERANCE_SECONDS } from "@/lib/timer";
+import { TIMEOUT_TOLERANCE_SECONDS, type LimitKind } from "@/lib/timer";
 import type { Database, Json } from "@/types/database";
 import type { EventBatchInput } from "@/lib/validation/observation";
 
@@ -13,13 +13,20 @@ type VideoRow = Database["public"]["Tables"]["videos"]["Row"];
 
 export type TimerSnapshot = {
   startedAt: string | null;
-  maxSeconds: number;
+  /** 영상별 제한(초). null = 없음 */
+  maxSeconds: number | null;
   timerMode: "wall_time" | "effective_time";
   wallElapsedSeconds: number;
   bufferingSeconds: number;
   effectiveElapsedSeconds: number;
-  remainingSeconds: number;
+  /** 지금 적용 중인 제한의 남은 시간. null = 제한 없음 */
+  remainingSeconds: number | null;
   expired: boolean;
+  /** 참여자 전체 마감 (본 관찰) */
+  totalDeadlineAt: string | null;
+  totalRemainingSeconds: number | null;
+  limitKind: LimitKind;
+  startedAfterTotalDeadline: boolean;
 };
 
 export type ObservationSnapshot = {
@@ -62,8 +69,12 @@ async function timerState(id: string): Promise<TimerSnapshot> {
     wallElapsedSeconds: Number(t.wall_elapsed_seconds),
     bufferingSeconds: Number(t.buffering_seconds),
     effectiveElapsedSeconds: Number(t.effective_elapsed_seconds),
-    remainingSeconds: Number(t.remaining_seconds),
+    remainingSeconds: t.remaining_seconds === null ? null : Number(t.remaining_seconds),
     expired: t.expired,
+    totalDeadlineAt: t.total_deadline_at,
+    totalRemainingSeconds: t.total_remaining_seconds === null ? null : Number(t.total_remaining_seconds),
+    limitKind: (t.limit_kind ?? "none") as LimitKind,
+    startedAfterTotalDeadline: t.started_after_total_deadline,
   };
 }
 
@@ -200,7 +211,8 @@ export async function submitObservation(
       await sb.rpc("save_observation_draft", { p_observation_id: id, p_text: input.text, p_revision: input.revision });
     }
     if (input.submissionType === "timeout") {
-      if (timer.remainingSeconds > TIMEOUT_TOLERANCE_SECONDS) {
+      // 제한 없음(null) 이면 timeout 제출 자체가 성립하지 않는다
+      if (timer.remainingSeconds === null || timer.remainingSeconds > TIMEOUT_TOLERANCE_SECONDS) {
         throw new AppError("TOO_EARLY_FOR_TIMEOUT", "아직 시간이 남아 있습니다", { remainingSeconds: timer.remainingSeconds });
       }
     } else if (!row.first_watch_completed_at) {

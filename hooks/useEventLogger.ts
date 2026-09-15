@@ -7,7 +7,7 @@ function uuid() {
   return typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-export type ServerTimerPayload = { timer?: { remainingSeconds: number }; status?: string; server_now?: string };
+export type ServerTimerPayload = { timer?: { remainingSeconds: number | null }; status?: string; server_now?: string };
 
 /**
  * 관찰별 이벤트 로거. fetch(JSON) 로 배치 전송, 페이지 이탈 시 sendBeacon(text/plain).

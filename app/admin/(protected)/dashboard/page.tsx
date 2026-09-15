@@ -85,7 +85,9 @@ export default async function DashboardPage() {
                 <Td mono>{o.video_code}</Td>
                 <Td mono>{o.presentation_order}</Td>
                 <Td className="text-xs">{fmtDate(o.started_at)}</Td>
-                <Td mono className={Number(o.remaining_seconds) <= 0 ? "text-red-700" : ""}>{Math.round(Number(o.remaining_seconds))}초</Td>
+                <Td mono className={o.remaining_seconds !== null && Number(o.remaining_seconds) <= 0 ? "text-red-700" : ""}>
+                  {o.remaining_seconds === null ? "제한 없음" : `${Math.round(Number(o.remaining_seconds))}초 (${o.limit_kind === "total" ? "전체" : "영상"})`}
+                </Td>
               </tr>
             ))}
           </Table>

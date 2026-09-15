@@ -17,7 +17,9 @@ export function remainingAt(anchor: TimerAnchor | null, perfNow: number, localBu
   return anchor.remainingSeconds - elapsed + credit;
 }
 
-export function timerLevel(remainingSeconds: number): TimerLevel {
+/** null(제한 없음) 은 항상 normal */
+export function timerLevel(remainingSeconds: number | null): TimerLevel {
+  if (remainingSeconds === null) return "normal";
   if (remainingSeconds <= 0) return "expired";
   if (remainingSeconds <= 10) return "warn10";
   if (remainingSeconds <= 30) return "warn30";

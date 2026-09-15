@@ -1262,6 +1262,7 @@ export type Database = {
           is_valid: boolean
           last_seen_at: string | null
           locked_until: string | null
+          main_deadline_at: string | null
           notes_admin: string | null
           order_group_id: string
           participant_code: string
@@ -1287,6 +1288,7 @@ export type Database = {
           is_valid?: boolean
           last_seen_at?: string | null
           locked_until?: string | null
+          main_deadline_at?: string | null
           notes_admin?: string | null
           order_group_id: string
           participant_code: string
@@ -1312,6 +1314,7 @@ export type Database = {
           is_valid?: boolean
           last_seen_at?: string | null
           locked_until?: string | null
+          main_deadline_at?: string | null
           notes_admin?: string | null
           order_group_id?: string
           participant_code?: string
@@ -1723,7 +1726,7 @@ export type Database = {
           first_watch_seek_enabled: boolean
           first_watch_text_enabled: boolean
           id: string
-          max_observation_seconds: number
+          max_observation_seconds: number | null
           mobile_allowed: boolean
           name: string
           participant_target: number
@@ -1736,6 +1739,7 @@ export type Database = {
           status: Database["public"]["Enums"]["study_status"]
           structure_locked_at: string | null
           timer_mode: Database["public"]["Enums"]["timer_mode"]
+          total_time_limit_seconds: number | null
           updated_at: string
           watermark_enabled: boolean
         }
@@ -1748,7 +1752,7 @@ export type Database = {
           first_watch_seek_enabled?: boolean
           first_watch_text_enabled?: boolean
           id?: string
-          max_observation_seconds?: number
+          max_observation_seconds?: number | null
           mobile_allowed?: boolean
           name: string
           participant_target?: number
@@ -1761,6 +1765,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["study_status"]
           structure_locked_at?: string | null
           timer_mode?: Database["public"]["Enums"]["timer_mode"]
+          total_time_limit_seconds?: number | null
           updated_at?: string
           watermark_enabled?: boolean
         }
@@ -1773,7 +1778,7 @@ export type Database = {
           first_watch_seek_enabled?: boolean
           first_watch_text_enabled?: boolean
           id?: string
-          max_observation_seconds?: number
+          max_observation_seconds?: number | null
           mobile_allowed?: boolean
           name?: string
           participant_target?: number
@@ -1786,6 +1791,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["study_status"]
           structure_locked_at?: string | null
           timer_mode?: Database["public"]["Enums"]["timer_mode"]
+          total_time_limit_seconds?: number | null
           updated_at?: string
           watermark_enabled?: boolean
         }
@@ -2406,6 +2412,7 @@ export type Database = {
           invalidated: boolean | null
           invalidated_reason: string | null
           is_practice: boolean | null
+          limit_kind: string | null
           observation_id: string | null
           order_group: string | null
           page_hidden_count: number | null
@@ -2419,6 +2426,7 @@ export type Database = {
           replay_count: number | null
           seek_count: number | null
           sentence_count: number | null
+          started_after_total_deadline: boolean | null
           started_at: string | null
           status: Database["public"]["Enums"]["observation_status"] | null
           study_id: string | null
@@ -2426,6 +2434,8 @@ export type Database = {
           submitted_at: string | null
           technical_issue: boolean | null
           timed_out: boolean | null
+          total_deadline_at: string | null
+          total_remaining_seconds: number | null
           updated_at: string | null
           video_code: string | null
           video_id: string | null
@@ -2594,6 +2604,7 @@ export type Database = {
           has_technical_issue: boolean | null
           is_valid: boolean | null
           last_seen_at: string | null
+          main_deadline_at: string | null
           notes_admin: string | null
           order_group: string | null
           order_group_id: string | null
@@ -2678,12 +2689,14 @@ export type Database = {
           invalidated: boolean | null
           invalidated_reason: string | null
           is_valid_record: boolean | null
+          main_deadline_at: string | null
           observation_id: string | null
           observation_text: string | null
           order_group: string | null
           page_hidden_count: number | null
           page_hidden_seconds: number | null
           participant_code: string | null
+          participant_started_at: string | null
           participant_status:
             | Database["public"]["Enums"]["participant_status"]
             | null
@@ -2691,8 +2704,10 @@ export type Database = {
           pause_count: number | null
           presentation_order: number | null
           replay_count: number | null
+          seconds_since_participant_start: number | null
           seek_count: number | null
           sentence_count: number | null
+          started_after_total_deadline: boolean | null
           started_at: string | null
           study_id: string | null
           submission_type: Database["public"]["Enums"]["submission_type"] | null
@@ -2966,6 +2981,7 @@ export type Database = {
           is_valid: boolean
           last_seen_at: string | null
           locked_until: string | null
+          main_deadline_at: string | null
           notes_admin: string | null
           order_group_id: string
           participant_code: string
@@ -3076,6 +3092,7 @@ export type Database = {
           is_valid: boolean
           last_seen_at: string | null
           locked_until: string | null
+          main_deadline_at: string | null
           notes_admin: string | null
           order_group_id: string
           participant_code: string
@@ -3181,11 +3198,15 @@ export type Database = {
           buffering_seconds: number
           effective_elapsed_seconds: number
           expired: boolean
+          limit_kind: string
           max_seconds: number
           remaining_seconds: number
+          started_after_total_deadline: boolean
           started_at: string
           submitted: boolean
           timer_mode: Database["public"]["Enums"]["timer_mode"]
+          total_deadline_at: string
+          total_remaining_seconds: number
           wall_elapsed_seconds: number
         }[]
       }
@@ -3248,7 +3269,7 @@ export type Database = {
           first_watch_seek_enabled: boolean
           first_watch_text_enabled: boolean
           id: string
-          max_observation_seconds: number
+          max_observation_seconds: number | null
           mobile_allowed: boolean
           name: string
           participant_target: number
@@ -3261,6 +3282,7 @@ export type Database = {
           status: Database["public"]["Enums"]["study_status"]
           structure_locked_at: string | null
           timer_mode: Database["public"]["Enums"]["timer_mode"]
+          total_time_limit_seconds: number | null
           updated_at: string
           watermark_enabled: boolean
         }
@@ -3406,7 +3428,7 @@ export type Database = {
           first_watch_seek_enabled: boolean
           first_watch_text_enabled: boolean
           id: string
-          max_observation_seconds: number
+          max_observation_seconds: number | null
           mobile_allowed: boolean
           name: string
           participant_target: number
@@ -3419,6 +3441,7 @@ export type Database = {
           status: Database["public"]["Enums"]["study_status"]
           structure_locked_at: string | null
           timer_mode: Database["public"]["Enums"]["timer_mode"]
+          total_time_limit_seconds: number | null
           updated_at: string
           watermark_enabled: boolean
         }
@@ -3448,6 +3471,7 @@ export type Database = {
           is_valid: boolean
           last_seen_at: string | null
           locked_until: string | null
+          main_deadline_at: string | null
           notes_admin: string | null
           order_group_id: string
           participant_code: string

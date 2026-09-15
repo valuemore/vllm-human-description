@@ -99,9 +99,10 @@ export async function logoutParticipant(ctx: ParticipantContext | null) {
 }
 
 export type ParticipantState = {
-  participant: { code: string; status: string };
+  participant: { code: string; status: string; mainDeadlineAt: string | null };
   study: {
-    maxObservationSeconds: number;
+    maxObservationSeconds: number | null;
+    totalTimeLimitSeconds: number | null;
     timerMode: string;
     mobileAllowed: boolean;
     watermarkEnabled: boolean;
@@ -114,9 +115,10 @@ export type ParticipantState = {
 export async function getParticipantState(ctx: ParticipantContext): Promise<ParticipantState> {
   const step = resolveNextStep(await loadParticipantSnapshot(ctx));
   return {
-    participant: { code: ctx.participant.participant_code, status: ctx.participant.status },
+    participant: { code: ctx.participant.participant_code, status: ctx.participant.status, mainDeadlineAt: ctx.participant.main_deadline_at },
     study: {
       maxObservationSeconds: ctx.study.max_observation_seconds,
+      totalTimeLimitSeconds: ctx.study.total_time_limit_seconds,
       timerMode: ctx.study.timer_mode,
       mobileAllowed: ctx.study.mobile_allowed,
       watermarkEnabled: ctx.study.watermark_enabled,

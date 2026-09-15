@@ -7,7 +7,7 @@ PRD가 요구하는 것은 일반 설문앱이 아니라 **연구조건을 시�
 
 - 교사 20명 × 동일 영상 5편 = 유효 관찰기록 100건 (complete crossed repeated-measures, `Outcome ~ Video + Order + (1|Teacher)`)
 - 5개 순환 순서그룹(O1~O5) × 4명 균형 배정
-- 영상당 300초 제한, 첫 시청 무중단(seek/pause/speed/텍스트 금지), 이후 재시청 허용, 자동저장, timeout 자동제출
+- 시간 제한: 영상별 `max_observation_seconds`(nullable) + 참여자 전체 `total_time_limit_seconds`(wall time, 첫 본 관찰 첫 재생부터). 2026-09-15 연구자 지시로 영상별 제한 해제·전체 40분 적용(마이그레이션 0010). 전체 마감 시 진행 중 관찰 자동제출, 남은 영상은 제한 없이 진행(`started_after_total_deadline` 플래그). 첫 시청 무중단(seek/pause/speed/텍스트 금지), 이후 재시청 허용, 자동저장
 - 교사 원문 / AI 기술문 / Reference Event / Claim Coding 4개 독립 레이어, 제출 원자료 불변(무효화는 flag + 새 attempt)
 - 영유아 영상 Private Storage + signed URL + 서버 인가, 참여자에게 AI/Reference/지표 미노출
 - 관리자 대시보드·원자료 조회·CSV/XLSX Export·Audit Log, Phase 2에서 AI/Reference/Coding/분석

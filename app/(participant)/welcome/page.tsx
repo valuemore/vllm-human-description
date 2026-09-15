@@ -4,6 +4,7 @@ import { classifyDeviceFromUA, isMobileLike } from "@/lib/participant/device";
 import { copy } from "@/lib/copy/participant.ko";
 import { getServiceClient } from "@/lib/db/service-client";
 import { activeMainObservations } from "@/lib/participant/resolveNextStep";
+import { toTimeLimits } from "@/lib/participant/timeLimits";
 import { WelcomeActions } from "./welcome-actions";
 
 export const dynamic = "force-dynamic";
@@ -20,13 +21,12 @@ export default async function WelcomePage() {
     .eq("active", true)
     .eq("has_audio", true);
   const totalVideos = activeMainObservations(snapshot.main).length || ctx.study.research_video_count;
-  const minutes = Math.round(ctx.study.max_observation_seconds / 60);
 
   return (
     <WelcomeActions
       serverMobile={serverMobile}
       mobileAllowed={ctx.study.mobile_allowed}
-      bullets={copy.welcome.bullets(totalVideos, minutes, minutes * totalVideos)}
+      bullets={copy.welcome.bullets(totalVideos, toTimeLimits(ctx.study))}
       env={copy.welcome.env((audioCount ?? 0) > 0)}
     />
   );

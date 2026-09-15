@@ -44,8 +44,11 @@ export default async function SettingsPage() {
         <Section title="실험 조건">
           <ActionForm action={updateSettingsAction} submitLabel="저장">
             <div className="grid grid-cols-2 gap-3">
-              <Field label="관찰 제한시간 (초)">
-                <input name="max_observation_seconds" type="number" min={30} max={3600} defaultValue={study.max_observation_seconds} className={inputCls} />
+              <Field label="영상별 제한시간 (초)" hint="비우면 영상별 제한 없음">
+                <input name="max_observation_seconds" type="number" min={30} max={3600} defaultValue={study.max_observation_seconds ?? ""} className={inputCls} />
+              </Field>
+              <Field label="전체 제한시간 (초)" hint="첫 본 관찰 첫 재생부터, wall time. 비우면 전체 제한 없음">
+                <input name="total_time_limit_seconds" type="number" min={60} max={86400} defaultValue={study.total_time_limit_seconds ?? ""} className={inputCls} />
               </Field>
               <Field label="타이머 기준">
                 <select name="timer_mode" defaultValue={study.timer_mode} className={inputCls}>
