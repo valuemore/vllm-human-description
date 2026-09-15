@@ -58,30 +58,57 @@ export function storagePathFor(video: Pick<VideoRow, "id" | "study_id">) {
   return `studies/${video.study_id}/videos/${video.id}.mp4`;
 }
 
-/** 브라우저가 Private Storage 로 직접 PUT 할 수 있는 1회용 업로드 URL */
-export async function createUploadUrl(videoId: string) {
-  const video = await getVideo(videoId);
-  if (video.storage_path && (await hasSubmittedObservations(videoId))) {
-    throw new AppError("CONFLICT", "제출된 관찰기록이 있는 영상 파일은 교체할 수 없습니다. 새 영상으로 등록하세요.");
-  }
-  const path = storagePathFor(video);
-  const { data, error } = await getServiceClient().storage.from(VIDEO_BUCKET).createSignedUploadUrl(path, { upsert: true });
-  if (error || !data) throw new AppError("INTERNAL", error?.message ?? "업로드 URL 발급 실패");
-  return { signedUrl: data.signedUrl, token: data.token, path };
+export const REPLACE_REASON_MIN = 5;
+
+/** 제출 기록이 있는 영상의 기존 파일 백업 경로 (같은 폴더, 원본 객체는 덮어쓰기 전에 여기로 복사된다) */
+export function backupPathFor(video: Pick<VideoRow, "id" | "study_id">, at: Date = new Date()) {
+  const stamp = at.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+  return `studies/${video.study_id}/videos/${video.id}.replaced-${stamp}.mp4`;
 }
 
-async function hasSubmittedObservations(videoId: string) {
+/**
+ * 브라우저가 Private Storage 로 직접 PUT 할 수 있는 1회용 업로드 URL.
+ * 제출된 관찰기록이 있는 영상은 기본적으로 교체를 거부한다. 같은 영상의 재인코딩 등 자극물이 바뀌지 않는 교체는
+ * 사유(필수)를 받아 허용하되, 덮어쓰기 전에 기존 파일을 백업 경로로 복사해 원본을 보존한다 (finalize 에서 감사 기록).
+ */
+export async function createUploadUrl(videoId: string, opts: { replaceReason?: string | null } = {}) {
+  const video = await getVideo(videoId);
+  const submitted = video.storage_path ? await countSubmittedObservations(videoId) : 0;
+  const reason = opts.replaceReason?.trim() ?? "";
+  let backupPath: string | null = null;
+  const sb = getServiceClient();
+  if (submitted > 0) {
+    if (reason.length < REPLACE_REASON_MIN) {
+      throw new AppError("CONFLICT", `제출된 관찰기록이 ${submitted}건 있는 영상입니다. 교체하려면 사유(${REPLACE_REASON_MIN}자 이상)를 입력하세요. 기존 파일은 백업으로 보존됩니다.`);
+    }
+    backupPath = backupPathFor(video);
+    const { error: copyErr } = await sb.storage.from(VIDEO_BUCKET).copy(video.storage_path!, backupPath);
+    if (copyErr) throw new AppError("INTERNAL", `기존 파일 백업에 실패해 교체를 중단했습니다: ${copyErr.message}`);
+  }
+  const path = storagePathFor(video);
+  const { data, error } = await sb.storage.from(VIDEO_BUCKET).createSignedUploadUrl(path, { upsert: true });
+  if (error || !data) throw new AppError("INTERNAL", error?.message ?? "업로드 URL 발급 실패");
+  return { signedUrl: data.signedUrl, token: data.token, path, backupPath, submittedCount: submitted };
+}
+
+async function countSubmittedObservations(videoId: string) {
   const { count } = await getServiceClient().from("observations").select("id", { count: "exact", head: true }).eq("video_id", videoId).eq("status", "submitted");
-  return (count ?? 0) > 0;
+  return count ?? 0;
 }
 
 export async function finalizeUpload(
   videoId: string,
   meta: { durationMs: number; width: number | null; height: number | null; fileSize: number | null; mimeType: string; hasAudio: boolean },
   adminId: string,
+  opts: { replaceReason?: string | null; backupPath?: string | null } = {},
 ) {
   const sb = getServiceClient();
   const video = await getVideo(videoId);
+  const submitted = video.storage_path ? await countSubmittedObservations(videoId) : 0;
+  const reason = opts.replaceReason?.trim() ?? "";
+  if (submitted > 0 && reason.length < REPLACE_REASON_MIN) {
+    throw new AppError("CONFLICT", "제출된 관찰기록이 있는 영상의 교체에는 사유가 필요합니다.");
+  }
   if (video.kind === "research" && exceedsResearchVideoMax(meta.durationMs)) {
     throw new AppError(
       "VALIDATION",
@@ -103,8 +130,13 @@ export async function finalizeUpload(
   if (error) throw fromDbError(error);
   await recordAudit({
     studyId: video.study_id, adminId, action: replaced ? "video_replaced" : "video_uploaded", targetType: "video", targetId: videoId,
-    before: replaced ? { duration_ms: video.duration_ms, file_size_bytes: video.file_size_bytes } : null,
-    after: { duration_ms: meta.durationMs, file_size_bytes: meta.fileSize, mime_type: meta.mimeType },
+    before: replaced
+      ? { duration_ms: video.duration_ms, file_size_bytes: video.file_size_bytes, mime_type: video.mime_type, has_audio: video.has_audio, width: video.width, height: video.height, backup_path: opts.backupPath ?? null }
+      : null,
+    after: {
+      duration_ms: meta.durationMs, file_size_bytes: meta.fileSize, mime_type: meta.mimeType, has_audio: meta.hasAudio, width: meta.width, height: meta.height,
+      ...(submitted > 0 ? { submitted_observations: submitted, replace_reason: reason } : {}),
+    },
   });
   return data;
 }

@@ -42,7 +42,7 @@ export default async function VideoDetailPage({ params }: { params: Promise<{ id
             <p className="text-sm text-muted-foreground">영상 파일이 없습니다.</p>
           )}
           <div className="mt-3">
-            <VideoUploader videoId={video.id} replaceWarning={!!video.storage_path} disabled={(submitted ?? 0) > 0 && !!video.storage_path} />
+            <VideoUploader videoId={video.id} replaceWarning={!!video.storage_path} submittedCount={submitted ?? 0} />
           </div>
           <dl className="mt-3 grid grid-cols-2 gap-y-1 text-sm">
             <dt className="text-muted-foreground">길이</dt>

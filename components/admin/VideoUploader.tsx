@@ -61,17 +61,34 @@ async function readMeta(file: File): Promise<MetaResult> {
  * Private Storage 직접 업로드 (signed upload URL). Vercel 함수 본문 제한(4.5MB)을 우회한다.
  * 1) 메타 읽기 → 2) upload-url → 3) PUT → 4) finalize(메타 저장 + audit)
  */
-export function VideoUploader({ videoId, disabled, replaceWarning }: { videoId: string; disabled?: boolean; replaceWarning?: boolean }) {
+const REPLACE_REASON_MIN = 5;
+
+/**
+ * submittedCount > 0 이면 제출된 관찰기록이 있는 영상이다. 이 경우 교체 사유(필수)를 받아 서버에 보내고,
+ * 서버는 기존 파일을 백업한 뒤 덮어쓰며 감사 로그에 사유·백업 경로를 남긴다.
+ */
+export function VideoUploader({ videoId, disabled, replaceWarning, submittedCount = 0 }: { videoId: string; disabled?: boolean; replaceWarning?: boolean; submittedCount?: number }) {
   const router = useRouter();
   const [state, setState] = useState<{ phase: "idle" | "reading" | "uploading" | "finalizing" | "done" | "error"; message?: string; progress?: number; warning?: string }>({ phase: "idle" });
+  const [reason, setReason] = useState("");
+  const requiresReason = !!replaceWarning && submittedCount > 0;
+  const reasonOk = !requiresReason || reason.trim().length >= REPLACE_REASON_MIN;
 
   async function onFile(file: File) {
-    if (replaceWarning && !window.confirm("기존 영상 파일을 교체합니다. 계속할까요?")) return;
+    const confirmText = requiresReason
+      ? `이 영상에는 제출된 관찰기록이 ${submittedCount}건 있습니다. 기존 파일은 백업으로 보존되고 새 파일로 교체되며, 사유가 감사 로그에 기록됩니다. 계속할까요?`
+      : "기존 영상 파일을 교체합니다. 계속할까요?";
+    if (replaceWarning && !window.confirm(confirmText)) return;
     try {
       setState({ phase: "reading" });
       const { warning, ...meta } = await readMeta(file);
       setState({ phase: "uploading", progress: 0 });
-      const urlRes = await fetch(`/api/admin/videos/${videoId}/upload-url`, { method: "POST" });
+      const replaceBody = requiresReason ? { replace_reason: reason.trim() } : {};
+      const urlRes = await fetch(`/api/admin/videos/${videoId}/upload-url`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(replaceBody),
+      });
       const urlBody = await urlRes.json();
       if (!urlBody.ok) throw new Error(urlBody.message ?? "업로드 URL 발급 실패");
       await putWithProgress(urlBody.data.signedUrl, file, (p) => setState({ phase: "uploading", progress: p }));
@@ -79,11 +96,13 @@ export function VideoUploader({ videoId, disabled, replaceWarning }: { videoId: 
       const finRes = await fetch(`/api/admin/videos/${videoId}/finalize`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...meta, file_size: file.size, mime_type: file.type || "video/mp4" }),
+        body: JSON.stringify({ ...meta, file_size: file.size, mime_type: file.type || "video/mp4", ...replaceBody, backup_path: urlBody.data.backupPath ?? undefined }),
       });
       const finBody = await finRes.json();
       if (!finBody.ok) throw new Error(finBody.message ?? "메타 저장 실패");
-      setState({ phase: "done", message: `완료 (${(meta.duration_ms / 1000).toFixed(1)}초, 오디오 ${meta.has_audio ? "있음" : "없음"})`, warning });
+      const backupNote = urlBody.data.backupPath ? ` · 기존 파일 백업: ${urlBody.data.backupPath}` : "";
+      setState({ phase: "done", message: `완료 (${(meta.duration_ms / 1000).toFixed(1)}초, 오디오 ${meta.has_audio ? "있음" : "없음"})${backupNote}`, warning });
+      setReason("");
       router.refresh();
     } catch (e) {
       setState({ phase: "error", message: (e as Error).message });
@@ -91,11 +110,27 @@ export function VideoUploader({ videoId, disabled, replaceWarning }: { videoId: 
   }
 
   const busy = state.phase === "reading" || state.phase === "uploading" || state.phase === "finalizing";
+  const blocked = disabled || busy || !reasonOk;
   return (
     <div className="text-sm">
-      <label className={`inline-block cursor-pointer rounded border px-3 py-1.5 hover:bg-muted ${disabled || busy ? "pointer-events-none opacity-50" : ""}`}>
+      {requiresReason && (
+        <div className="mb-2">
+          <label htmlFor={`replace-reason-${videoId}`} className="block text-xs text-muted-foreground">
+            교체 사유 (필수, {REPLACE_REASON_MIN}자 이상) — 제출 기록 {submittedCount}건이 있는 영상입니다. 같은 영상의 재인코딩처럼 자극물 내용이 바뀌지 않는 경우에만 교체하세요.
+          </label>
+          <input
+            id={`replace-reason-${videoId}`}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            disabled={disabled || busy}
+            placeholder="예: HEVC → H.264 재인코딩 (내용 동일)"
+            className="mt-1 w-full rounded border px-2 py-1.5"
+          />
+        </div>
+      )}
+      <label className={`inline-block cursor-pointer rounded border px-3 py-1.5 hover:bg-muted ${blocked ? "pointer-events-none opacity-50" : ""}`}>
         {replaceWarning ? "파일 교체" : "파일 업로드"}
-        <input type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden" disabled={disabled || busy} onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
+        <input type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden" disabled={blocked} onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
       </label>
       {state.phase === "reading" && <span className="ml-2 text-muted-foreground">메타데이터 읽는 중…</span>}
       {state.phase === "uploading" && <span className="ml-2 text-muted-foreground">업로드 {Math.round((state.progress ?? 0) * 100)}%</span>}

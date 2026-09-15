@@ -65,6 +65,7 @@ Supabase 대시보드에서 확인할 것:
 | 상황 | 조치 |
 |---|---|
 | 참여자가 PIN 을 잊음 | `/admin/participants/[id]` → PIN 재설정 (기존 세션 종료, 새 PIN 1회 표시) |
+| 제출 기록이 있는 영상의 파일 교체 (재인코딩 등 내용이 같은 경우만) | `/admin/videos/[id]` → **교체 사유 입력(5자 이상)** → 파일 교체. 서버가 기존 파일을 `…/<id>.replaced-<시각>.mp4` 로 백업한 뒤 덮어쓰고, 감사 로그(`video_replaced`)에 사유·백업 경로·전후 메타를 기록. 교체 후 `npm run videos:probe` 로 코덱(avc1)·오디오 확인 |
 | 네트워크 단절·영상 오류로 기록 손상 | `/admin/observations/[id]` → 사유 입력 후 **무효화 + 새 attempt 생성**. 원문·이벤트는 보존 |
 | 중도탈락 | `/admin/participants/[id]` → 참여 중단(withdrawn). 같은 순서그룹에 대체 참여자 생성 시 "대체 대상" 선택 |
 | 진행 중 관찰이 만료된 채 남음 | 참여자 재접속 시 즉시, 그 외에는 cron(Hobby 플랜 매일 1회, Pro 5분)이 timeout 제출. 대시보드 "진행 중인 관찰" 표에서 확인 |
