@@ -157,7 +157,18 @@ function putWithProgress(url: string, file: File, onProgress: (p: number) => voi
     xhr.setRequestHeader("content-type", file.type || "video/mp4");
     xhr.setRequestHeader("x-upsert", "true");
     xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
-    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`업로드 실패 (${xhr.status})`)));
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) return resolve();
+      // 스토리지가 돌려준 사유(mime 미허용, 용량 초과, 토큰 만료 등)를 그대로 보여 준다
+      let detail = "";
+      try {
+        const body = JSON.parse(xhr.responseText) as { message?: string; error?: string };
+        detail = body.message ?? body.error ?? "";
+      } catch {
+        detail = xhr.responseText.slice(0, 200);
+      }
+      reject(new Error(`업로드 실패 (${xhr.status})${detail ? `: ${detail}` : ""} — 파일 형식 ${file.type || "(알 수 없음)"}, ${(file.size / 1048576).toFixed(1)} MB`));
+    };
     xhr.onerror = () => reject(new Error("업로드 네트워크 오류"));
     xhr.send(file);
   });

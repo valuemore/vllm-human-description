@@ -81,14 +81,32 @@ export async function createUploadUrl(videoId: string, opts: { replaceReason?: s
     if (reason.length < REPLACE_REASON_MIN) {
       throw new AppError("CONFLICT", `제출된 관찰기록이 ${submitted}건 있는 영상입니다. 교체하려면 사유(${REPLACE_REASON_MIN}자 이상)를 입력하세요. 기존 파일은 백업으로 보존됩니다.`);
     }
-    backupPath = backupPathFor(video);
-    const { error: copyErr } = await sb.storage.from(VIDEO_BUCKET).copy(video.storage_path!, backupPath);
-    if (copyErr) throw new AppError("INTERNAL", `기존 파일 백업에 실패해 교체를 중단했습니다: ${copyErr.message}`);
+    backupPath = await ensureBackup(video);
   }
   const path = storagePathFor(video);
   const { data, error } = await sb.storage.from(VIDEO_BUCKET).createSignedUploadUrl(path, { upsert: true });
   if (error || !data) throw new AppError("INTERNAL", error?.message ?? "업로드 URL 발급 실패");
   return { signedUrl: data.signedUrl, token: data.token, path, backupPath, submittedCount: submitted };
+}
+
+/**
+ * 현재 파일을 백업 경로로 복사한다. 업로드가 실패해 재시도하는 경우처럼 같은 크기의 백업이 이미 있으면 재사용한다
+ * (원본은 아직 덮어써지지 않았으므로 크기가 같으면 동일 파일이다).
+ */
+async function ensureBackup(video: VideoRow): Promise<string> {
+  const sb = getServiceClient();
+  const path = video.storage_path!;
+  const dir = path.slice(0, path.lastIndexOf("/"));
+  const file = path.slice(path.lastIndexOf("/") + 1);
+  const { data: objects } = await sb.storage.from(VIDEO_BUCKET).list(dir, { search: video.id, limit: 100 });
+  const current = objects?.find((o) => o.name === file);
+  const size = (current?.metadata as { size?: number } | undefined)?.size;
+  const existing = objects?.find((o) => o.name.startsWith(`${video.id}.replaced-`) && size !== undefined && (o.metadata as { size?: number } | undefined)?.size === size);
+  if (existing) return `${dir}/${existing.name}`;
+  const backupPath = backupPathFor(video);
+  const { error: copyErr } = await sb.storage.from(VIDEO_BUCKET).copy(path, backupPath);
+  if (copyErr) throw new AppError("INTERNAL", `기존 파일 백업에 실패해 교체를 중단했습니다: ${copyErr.message}`);
+  return backupPath;
 }
 
 async function countSubmittedObservations(videoId: string) {
