@@ -6,7 +6,7 @@
  */
 import { z } from "zod";
 
-export const SUPPORT_TYPES = ["observed", "inference_supported", "inference_unsupported", "hallucination", "unclear"] as const;
+export const SUPPORT_TYPES = ["observed", "observed_unreferenced", "inference_supported", "inference_unsupported", "hallucination", "unclear"] as const;
 export const ACCURACY_LEVELS = ["correct", "partial", "incorrect", "not_applicable"] as const;
 
 const accuracy = z.enum(ACCURACY_LEVELS).nullable();

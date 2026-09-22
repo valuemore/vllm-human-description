@@ -4,7 +4,7 @@ import { fromDbError } from "@/lib/errors";
 
 export type MetricFilters = { video?: string; participant?: string; order?: number; run?: number };
 
-const METRIC_KEYS = ["precision", "recall", "f1", "omission_rate", "hallucination_rate", "inference_rate", "temporal_fidelity", "actor_accuracy", "action_accuracy", "object_accuracy", "granularity_mean"] as const;
+const METRIC_KEYS = ["precision", "recall", "f1", "omission_rate", "hallucination_rate", "unreferenced_rate", "inference_rate", "temporal_fidelity", "actor_accuracy", "action_accuracy", "object_accuracy", "granularity_mean"] as const;
 export type MetricKey = (typeof METRIC_KEYS)[number];
 export const METRIC_LABELS: Record<MetricKey, string> = {
   precision: "Precision",
@@ -12,6 +12,7 @@ export const METRIC_LABELS: Record<MetricKey, string> = {
   f1: "F1",
   omission_rate: "Omission",
   hallucination_rate: "Hallucination",
+  unreferenced_rate: "Unref. detail",
   inference_rate: "Inference",
   temporal_fidelity: "Temporal",
   actor_accuracy: "Actor",

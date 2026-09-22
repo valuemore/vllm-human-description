@@ -18,7 +18,8 @@
 | 값 | 기준 | matched_reference_event_id |
 |---|---|---|
 | `observed` | 누가·무엇을 했는지에 대한 **사실적 행동 기술**이며, Reference Event 중 같은 행동이 있다 | 필수. 가장 잘 대응하는 Event 1개 |
-| `hallucination` | 사실적 행동 기술이지만 대응하는 Reference Event 가 없다(영상에 없는 행동, 예: Reference 에 없는 "교사 손 잡고 걷기") | null |
+| `observed_unreferenced` | 사실적 행동 기술이며 **영상에 실제로 나타나지만**, 미미하거나 순간적인 동작이라 Reference 에 기재되지 않았다(관찰자가 세부를 묘사할 때 나타남). 연구자 지시(2026-09-22): Reference 에 없는 사실 기술은 영상으로 확인하기 전까지 이 범주를 기본값으로 둔다 | null |
+| `hallucination` | 사실적 행동 기술이지만 **영상에서 전혀 확인되지 않는다**(다른 영상의 내용, 없는 인물·사물·행동). 영상 확인 없이는 부여하지 않는다 | null |
 | `inference_supported` | 의도·정서·이해·능력·학습에 대한 **해석·추론·평가**이며, 그 근거가 되는 Reference Event 가 있다 | 필수. 근거 Event 1개 |
 | `inference_unsupported` | 해석·추론이지만 Reference 에 근거가 없다 | null |
 | `unclear` | 판단 불가, 문장이 잘려 있음, 또는 **관찰 기술이 아닌 문장**(교사의 향후 지원 계획, 교육과정 연계 의견, "~하겠다", "~제공하겠다") | null |

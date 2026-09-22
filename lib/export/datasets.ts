@@ -331,7 +331,7 @@ export const DATASETS: Dataset[] = [
       { key: "coder_id", type: "string", description: "코더 UUID" },
       { key: "matched_reference_event_id", type: "string", description: "대응 Reference Event" },
       { key: "matched_event_code", type: "string", description: "대응 Event 코드" },
-      { key: "support_type", type: "string", description: "지지 유형", values: "observed|inference_supported|inference_unsupported|hallucination|unclear" },
+      { key: "support_type", type: "string", description: "지지 유형. observed_unreferenced = 영상에 나타나지만 미미·순간적이라 Reference 에 없는 세부 기술(hallucination 과 구분)", values: "observed|observed_unreferenced|inference_supported|inference_unsupported|hallucination|unclear" },
       { key: "actor_accuracy", type: "string", description: "행위자 정확성", values: "correct|partial|incorrect|not_applicable" },
       { key: "action_accuracy", type: "string", description: "행동 정확성" },
       { key: "object_accuracy", type: "string", description: "대상 정확성" },

@@ -97,7 +97,7 @@ export default async function AnalysisPage({ searchParams }: { searchParams: Pro
       </Section>
 
       <Section title="기록별 지표 (Claim Coding 결과)">
-        <Table head={["출처", "영상", "라벨", "순서", "Claim", "observed", "halluc.", "inference", "matched/ref", ...METRIC_KEYS.slice(0, 7).map((k) => METRIC_LABELS[k])]} empty="확정된 코딩 세션이 없습니다">
+        <Table head={["출처", "영상", "라벨", "순서", "Claim", "observed", "unref.", "halluc.", "inference", "matched/ref", ...METRIC_KEYS.slice(0, 8).map((k) => METRIC_LABELS[k])]} empty="확정된 코딩 세션이 없습니다">
           {a.metrics.map((m) => (
             <tr key={`${m.source_record_id}-${m.coder_id}`}>
               <Td>{m.source_type === "teacher" ? "교사" : "AI"}</Td>
@@ -106,12 +106,13 @@ export default async function AnalysisPage({ searchParams }: { searchParams: Pro
               <Td mono>{m.presentation_order ?? "—"}</Td>
               <Td mono>{m.claim_total}</Td>
               <Td mono>{m.observed}</Td>
+              <Td mono>{m.observed_unreferenced}</Td>
               <Td mono>{m.hallucination}</Td>
               <Td mono>{(m.inference_supported ?? 0) + (m.inference_unsupported ?? 0)}</Td>
               <Td mono>
                 {m.matched_events}/{m.reference_total}
               </Td>
-              {METRIC_KEYS.slice(0, 7).map((k) => (
+              {METRIC_KEYS.slice(0, 8).map((k) => (
                 <Td key={k} mono>
                   {pct(m[k] === null ? null : Number(m[k]))}
                 </Td>

@@ -12,10 +12,11 @@ import { addClaimAction, autoSplitAction, codeClaimAction, deleteClaimAction, se
 export const dynamic = "force-dynamic";
 
 const SUPPORT: [string, string][] = [
-  ["observed", "observed — 영상에서 확인되는 사실적 기술"],
+  ["observed", "observed — 영상에서 확인되는 사실적 기술 (Reference 대응)"],
+  ["observed_unreferenced", "observed_unreferenced — 영상에 나타나지만 미미·순간적이라 Reference 에 없는 세부 기술"],
   ["inference_supported", "inference_supported — 영상 근거가 있는 해석"],
   ["inference_unsupported", "inference_unsupported — 근거 없는 해석"],
-  ["hallucination", "hallucination — 영상으로 확인되지 않는 사실적 기술"],
+  ["hallucination", "hallucination — 영상에서 전혀 확인되지 않는 사실적 기술"],
   ["unclear", "unclear — 판단 불가"],
 ];
 const ACC: [string, string][] = [

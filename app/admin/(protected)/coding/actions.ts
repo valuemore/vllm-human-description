@@ -79,7 +79,7 @@ export async function codeClaimAction(_p: ActionState, fd: FormData): Promise<Ac
       .object({
         session_id: z.string().uuid(),
         claim_id: z.string().uuid(),
-        support_type: z.enum(["observed", "inference_supported", "inference_unsupported", "hallucination", "unclear"]),
+        support_type: z.enum(["observed", "observed_unreferenced", "inference_supported", "inference_unsupported", "hallucination", "unclear"]),
         matched_reference_event_id: z.preprocess((v) => (v === "" ? null : v), z.string().uuid().nullable()),
         actor_accuracy: optAcc,
         action_accuracy: optAcc,

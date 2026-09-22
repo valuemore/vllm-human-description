@@ -2037,6 +2037,7 @@ export type Database = {
           matched_events: number | null
           object_accuracy: number | null
           observed: number | null
+          observed_unreferenced: number | null
           precision: number | null
           recall: number | null
           reference_total: number | null
@@ -2047,6 +2048,7 @@ export type Database = {
           source_type: Database["public"]["Enums"]["source_type"] | null
           study_id: string | null
           temporal_fidelity: number | null
+          unreferenced_rate: number | null
           unclear: number | null
           video_code: string | null
           video_id: string | null
@@ -2127,6 +2129,7 @@ export type Database = {
           matched_events: number | null
           object_accuracy: number | null
           observed: number | null
+          observed_unreferenced: number | null
           omission_rate: number | null
           precision: number | null
           recall: number | null
@@ -2138,6 +2141,7 @@ export type Database = {
           source_type: Database["public"]["Enums"]["source_type"] | null
           study_id: string | null
           temporal_fidelity: number | null
+          unreferenced_rate: number | null
           unclear: number | null
           video_code: string | null
           video_id: string | null
@@ -3586,6 +3590,7 @@ export type Database = {
         | "inference_supported"
         | "inference_unsupported"
         | "hallucination"
+        | "observed_unreferenced"
         | "unclear"
       timer_mode: "wall_time" | "effective_time"
       video_kind: "research" | "practice"
