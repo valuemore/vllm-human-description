@@ -104,9 +104,17 @@ export function PassBadge({ pass, label }: { pass: boolean; label?: string }) {
   );
 }
 
+/** 관리자 화면 표시 시간대. 서버 컴포넌트는 Vercel(UTC)에서 렌더되므로 명시해야 KST 로 보인다. */
+export const ADMIN_TZ = "Asia/Seoul";
+
 export function fmtDate(v: string | null | undefined) {
   if (!v) return "—";
-  return new Date(v).toLocaleString("ko-KR", { hour12: false });
+  return new Date(v).toLocaleString("ko-KR", { hour12: false, timeZone: ADMIN_TZ });
+}
+
+export function fmtTime(v: string | null | undefined) {
+  if (!v) return "—";
+  return new Date(v).toLocaleTimeString("ko-KR", { hour12: false, timeZone: ADMIN_TZ });
 }
 
 export function fmtSec(v: number | string | null | undefined) {

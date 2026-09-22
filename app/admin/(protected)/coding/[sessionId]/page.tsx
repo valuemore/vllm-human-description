@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionForm, Field, inputCls } from "@/components/admin/ActionForm";
 import { ClaimSelector } from "@/components/admin/ClaimSelector";
-import { Notice, PageHeader, Section, Table, Td } from "@/components/admin/ui";
+import { fmtDate, fmtTime, Notice, PageHeader, Section, Table, Td } from "@/components/admin/ui";
 import { draftMatchesCoding } from "@/lib/coding/draftClaims";
 import { AppError } from "@/lib/errors";
 import { getWorkspace } from "@/lib/services/admin/coding";
@@ -50,7 +50,7 @@ export default async function CodingWorkspacePage({ params }: { params: Promise<
     <>
       <PageHeader
         title={`${video?.code} · ${source?.source_type === "teacher" ? "교사" : "AI"} ${source?.source_label ?? ""}`}
-        description={`세션 ${session.status}${session.finalized_at ? ` · 확정 ${new Date(session.finalized_at).toLocaleString("ko-KR")}` : ""} · Claim ${claims.length} (미코딩 ${uncoded}${draftTotal ? `, 초안 미확인 ${unreviewed}/${draftTotal}` : ""})`}
+        description={`세션 ${session.status}${session.finalized_at ? ` · 확정 ${fmtDate(session.finalized_at)}` : ""} · Claim ${claims.length} (미코딩 ${uncoded}${draftTotal ? `, 초안 미확인 ${unreviewed}/${draftTotal}` : ""})`}
         actions={
           <Link className="text-sm underline" href="/admin/coding">
             목록
@@ -118,7 +118,7 @@ export default async function CodingWorkspacePage({ params }: { params: Promise<
                     {draft && <span className="mr-2 rounded bg-amber-200 px-1.5 py-0.5 text-xs font-medium text-amber-900">초안 · 미확인</span>}
                     {k?.reviewed_at && (
                       <span className="mr-2 rounded bg-emerald-100 px-1.5 py-0.5 text-xs font-medium text-emerald-800">
-                        {k.draft_source ? "확인됨" : "저장됨"} {new Date(k.reviewed_at).toLocaleTimeString("ko-KR")}
+                        {k.draft_source ? "확인됨" : "저장됨"} {fmtTime(k.reviewed_at)}
                         {k.draft_source && draftChanged(k) && " · 초안에서 수정"}
                       </span>
                     )}
