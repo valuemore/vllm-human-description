@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ActionForm, Field, inputCls } from "@/components/admin/ActionForm";
 import { ClaimSelector } from "@/components/admin/ClaimSelector";
 import { Notice, PageHeader, Section, Table, Td } from "@/components/admin/ui";
+import { draftMatchesCoding } from "@/lib/coding/draftClaims";
 import { AppError } from "@/lib/errors";
 import { getWorkspace } from "@/lib/services/admin/coding";
 import { signVideoForAdmin } from "@/lib/services/videos";
@@ -43,6 +44,7 @@ export default async function CodingWorkspacePage({ params }: { params: Promise<
   const unreviewed = claims.filter((c) => isDraft(c.coding)).length;
   const draftTotal = claims.filter((c) => c.coding?.draft_source).length;
   const draftSource = session.draft_source ?? claims.find((c) => c.coding?.draft_source)?.coding?.draft_source ?? null;
+  const draftChanged = (k: NonNullable<(typeof claims)[number]["coding"]>) => !draftMatchesCoding(k.draft_values as Record<string, unknown> | null, k);
 
   return (
     <>
@@ -106,13 +108,20 @@ export default async function CodingWorkspacePage({ params }: { params: Promise<
           {claims.map((c) => {
             const k = c.coding;
             const draft = isDraft(k);
+            // 저장(서버 액션) 후 React 가 폼을 자동 초기화하므로, 코딩 행이 바뀌면 카드를 다시 마운트해 저장된 값이 기본값이 되게 한다.
+            const cardKey = `${c.id}:${k?.updated_at ?? "none"}:${k?.reviewed_at ?? ""}`;
             return (
-              <div key={c.id} className={`rounded-lg border p-3 ${draft ? "border-amber-400 bg-amber-50/40" : k ? "border-emerald-200" : "border-amber-300"}`}>
+              <div key={cardKey} className={`rounded-lg border p-3 ${draft ? "border-amber-400 bg-amber-50/40" : k ? "border-emerald-200" : "border-amber-300"}`}>
                 <div className="flex items-start justify-between gap-3">
                   <p className="text-sm">
                     <span className="mr-2 font-mono text-xs text-muted-foreground">#{c.claim_order}</span>
                     {draft && <span className="mr-2 rounded bg-amber-200 px-1.5 py-0.5 text-xs font-medium text-amber-900">초안 · 미확인</span>}
-                    {k?.draft_source && k.reviewed_at && <span className="mr-2 rounded bg-emerald-100 px-1.5 py-0.5 text-xs font-medium text-emerald-800">확인됨</span>}
+                    {k?.reviewed_at && (
+                      <span className="mr-2 rounded bg-emerald-100 px-1.5 py-0.5 text-xs font-medium text-emerald-800">
+                        {k.draft_source ? "확인됨" : "저장됨"} {new Date(k.reviewed_at).toLocaleTimeString("ko-KR")}
+                        {k.draft_source && draftChanged(k) && " · 초안에서 수정"}
+                      </span>
+                    )}
                     {c.claim_text}
                     {c.char_start !== null && <span className="ml-2 font-mono text-xs text-muted-foreground">[{c.char_start}–{c.char_end}]</span>}
                   </p>
