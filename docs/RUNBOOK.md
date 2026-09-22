@@ -78,7 +78,30 @@ Supabase 대시보드에서 확인할 것:
 2. `/admin/reference` — 영상별 Reference Event(행위자·행동·대상·신체/도구·관계·시간순서·start/end) 작성. CSV import 가능. 모든 변경은 이력 스냅샷으로 보존.
 3. `/admin/coding` — 교사 기록·AI run 별 코딩 세션: 원문 드래그 선택 또는 문장 자동 분할로 Claim 생성 → support_type·대응 Event·정확성·granularity 입력 → **확정(finalize)**. 확정된 세션만 지표에 반영.
 4. `/admin/analysis` — 기술통계(§32.1), 교사 vs AI 지표(P/R/F1/Omission/Hallucination/Inference/Temporal/AAO/Granularity), Human Detection Rate 4분면.
-5. `/admin/exports` — 전체 파일 export (codebook.csv 포함). 통계분석은 R/Python/SPSS: `Outcome ~ Video + Order + (1 | Teacher)`.
+5. `/admin/exports` — 전체 파일 export (codebook.csv 포함). 통계분석은 R/Python/SPSS: 설계대로 순서그룹이 균형이면 `Outcome ~ Video + Order + (1 | Teacher)`.
+
+### 4.1 본 수집(2026-09) 결과에 따른 분석 방침 — 고정 순서 설계로 수용 (2026-09-22 연구자 결정)
+
+- 수집 결과: 유효 참여자 20명(T02–T21, T01 은 파일럿으로 `withdrawn` 처리), 유효 기록 100/100, 영상별 20/20. 그러나 순서그룹 배정이 O1=19명, O2=1명(T21), O3–O5=0명으로 **순환 라틴방진 균형이 이루어지지 않았다**(대시보드 `video_position_occurrence`·`group_valid_participants` FAIL, `DATA COLLECTION COMPLETE` 배지는 표시되지 않으며 이후에도 표시되지 않는다).
+- 결정: 추가 모집 없이 **고정 순서(V01→V02→V03→V04→V05) 설계**로 수용한다. 순서 효과와 영상 효과가 분리되지 않으므로 `Order` 항을 모형에서 제외하고 `Outcome ~ Video + (1 | Teacher)` 를 사용하며, 순서 미균형은 연구 제한점으로 보고한다.
+- T21(O2)은 유일하게 다른 순서로 시청한 참여자다. 기본 분석에는 포함하되, 민감도 분석으로 T21 제외 결과를 함께 보고한다. export 의 `order_group`·`presentation_order` 열은 그대로 유지한다.
+- 대시보드 배지·균형 검증 로직은 설계 원칙(PRD §54)대로 두고 변경하지 않는다.
+- 2026-09-22 연구 상태 `closed` 전환 완료, `all.xlsx`(teacher_observations 105행 = 유효 100 + T01 5, interaction_events 2,270행) 오프라인 백업 완료.
+
+### 4.2 유효 기록 100건의 품질 플래그 (export 기준, 2026-09-22)
+
+| 구분 | 해당 기록 | 비고 |
+|---|---|---|
+| 본문 0자 | T06-V03 (전체 마감 timeout, 1,898 s), T21-V03 (manual, seek 97회), T21-V04 (300 s timeout) | **결정(2026-09-22 연구자): 유효 기록으로 유지, 무효화하지 않음.** 텍스트·Claim 기반 지표(글자수·문장수·P/R/F1·Omission 등)에서는 결측(NA) 처리하고, 참여 완료·시간·재생행동 변수에는 포함한다. 코딩 세션은 생성하지 않는다(Claim 0건). 분석 시 `character_count = 0` 으로 식별 |
+| timeout 제출 | T06-V03, T20-V01(62자), T21-V02(20자), T21-V04 | T20-V01·T21-V02·V04 는 0010 배포 전(2026-09-15 오전) **영상별 300 s 제한** 조건에서 수집됨. 나머지 96건은 전체 40분 제한 조건. 제한시간 조건 이질성을 제한점으로 보고 |
+| 전체 마감 후 시작 (`started_after_total_deadline`) | T06-V04·V05, T20-V02~V05(약 7.9시간 후), T21-V05·V01(약 31시간 후) | T20·T21 은 두 세션에 걸쳐 참여. 시간 제한 없이 작성된 기록 |
+| 탭 이탈 60 s 초과 (`page_hidden_seconds`) | T09(4건), T15(5건), T19-V01, T20(3건) | 무효 사유는 아님. 민감도 분석 공변량 후보 |
+| 짧은 본문(<30자) | T02-V01(28자), T21-V02(20자) | 유효 |
+| 기기 | desktop/edge 75, desktop/chrome 25 | 모바일 0 |
+
+- AI run 15건은 영상당 `gemini-2.5-pro(observe v2)`, `claude-fable-5(observe v3)`, `gemini-2.5-pro(observe v4)` 로, 동일 조건 반복이 아니라 **모델×프롬프트 조건 3종**이다. 분석에서 "AI" 를 단일 조건으로 합치지 말고 run(모델·프롬프트 버전)을 요인으로 다룬다.
+- export 의 `response_claims` 에 T01-V01 코딩 시험 세션(미확정, claim 3건)이 남아 있다. 확정되지 않았으므로 지표에 반영되지 않는다.
+- 영상 `title_admin` 이 아직 placeholder 다. 코딩 착수 전 `/admin/videos` 에서 실제 제목으로 정리.
 
 ## 5. Definition of Done 체크리스트 (PRD §56)
 
