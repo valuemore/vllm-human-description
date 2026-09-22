@@ -1,3 +1,4 @@
+import { draftMatchesCoding } from "@/lib/coding/draftClaims";
 import "server-only";
 import { getServiceClient, type ServiceClient } from "@/lib/db/service-client";
 import { fromDbError } from "@/lib/errors";
@@ -337,10 +338,20 @@ export const DATASETS: Dataset[] = [
       { key: "temporal_accuracy", type: "string", description: "시간 정확성" },
       { key: "granularity_score", type: "integer", description: "구체성 1(포괄)-3(구체)" },
       { key: "notes", type: "string", description: "코더 메모" },
+      { key: "draft_source", type: "string", description: "초안 생성 주체 (빈값 = 코더 직접 입력)" },
+      { key: "draft_values", type: "json", description: "초안 원본값 JSON (코더 수정 전)" },
+      { key: "reviewed_at", type: "timestamp", description: "코더 확인·저장 시각" },
+      { key: "draft_changed", type: "boolean", description: "코더 저장값이 초안과 다른지 (초안 없으면 빈값)" },
     ],
     query: async (sb, s) => {
       const rows = await paged((f, t) => sb.from("claim_codings").select("*, claim:response_claims!inner(coding_session_id, session:coding_sessions!inner(study_id)), ref:reference_events(event_code)").eq("claim.session.study_id", s).range(f, t));
-      return rows.map((r) => ({ ...r, claim_coding_id: r.id, matched_event_code: (r.ref as { event_code: string } | null)?.event_code ?? null }));
+      return rows.map((r) => ({
+        ...r,
+        claim_coding_id: r.id,
+        matched_event_code: (r.ref as { event_code: string } | null)?.event_code ?? null,
+        draft_values: r.draft_values === null ? null : JSON.stringify(r.draft_values),
+        draft_changed: r.draft_source === null ? null : !draftMatchesCoding(r.draft_values as Record<string, unknown> | null, r),
+      }));
     },
   },
   {

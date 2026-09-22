@@ -358,6 +358,9 @@ export type Database = {
           claim_id: string
           coder_id: string
           created_at: string
+          draft_source: string | null
+          draft_values: Json | null
+          reviewed_at: string | null
           granularity_score: number | null
           id: string
           matched_reference_event_id: string | null
@@ -375,6 +378,9 @@ export type Database = {
           claim_id: string
           coder_id: string
           created_at?: string
+          draft_source?: string | null
+          draft_values?: Json | null
+          reviewed_at?: string | null
           granularity_score?: number | null
           id?: string
           matched_reference_event_id?: string | null
@@ -392,6 +398,9 @@ export type Database = {
           claim_id?: string
           coder_id?: string
           created_at?: string
+          draft_source?: string | null
+          draft_values?: Json | null
+          reviewed_at?: string | null
           granularity_score?: number | null
           id?: string
           matched_reference_event_id?: string | null
@@ -438,6 +447,8 @@ export type Database = {
         Row: {
           coder_id: string
           created_at: string
+          draft_generated_at: string | null
+          draft_source: string | null
           finalized_at: string | null
           id: string
           notes: string | null
@@ -452,6 +463,8 @@ export type Database = {
         Insert: {
           coder_id: string
           created_at?: string
+          draft_generated_at?: string | null
+          draft_source?: string | null
           finalized_at?: string | null
           id?: string
           notes?: string | null
@@ -466,6 +479,8 @@ export type Database = {
         Update: {
           coder_id?: string
           created_at?: string
+          draft_generated_at?: string | null
+          draft_source?: string | null
           finalized_at?: string | null
           id?: string
           notes?: string | null

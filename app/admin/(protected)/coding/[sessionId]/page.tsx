@@ -39,12 +39,16 @@ export default async function CodingWorkspacePage({ params }: { params: Promise<
   const signed = video?.storage_path ? await signVideoForAdmin(session.video_id).catch(() => null) : null;
   const open = session.status === "open";
   const uncoded = claims.filter((c) => !c.coding).length;
+  const isDraft = (k: { draft_source: string | null; reviewed_at: string | null } | null) => !!k && k.draft_source !== null && k.reviewed_at === null;
+  const unreviewed = claims.filter((c) => isDraft(c.coding)).length;
+  const draftTotal = claims.filter((c) => c.coding?.draft_source).length;
+  const draftSource = session.draft_source ?? claims.find((c) => c.coding?.draft_source)?.coding?.draft_source ?? null;
 
   return (
     <>
       <PageHeader
         title={`${video?.code} · ${source?.source_type === "teacher" ? "교사" : "AI"} ${source?.source_label ?? ""}`}
-        description={`세션 ${session.status}${session.finalized_at ? ` · 확정 ${new Date(session.finalized_at).toLocaleString("ko-KR")}` : ""} · Claim ${claims.length} (미코딩 ${uncoded})`}
+        description={`세션 ${session.status}${session.finalized_at ? ` · 확정 ${new Date(session.finalized_at).toLocaleString("ko-KR")}` : ""} · Claim ${claims.length} (미코딩 ${uncoded}${draftTotal ? `, 초안 미확인 ${unreviewed}/${draftTotal}` : ""})`}
         actions={
           <Link className="text-sm underline" href="/admin/coding">
             목록
@@ -52,6 +56,11 @@ export default async function CodingWorkspacePage({ params }: { params: Promise<
         }
       />
       {!open && <Notice tone="info">확정된 세션입니다. 수정하려면 아래에서 다시 여세요.</Notice>}
+      {open && unreviewed > 0 && (
+        <Notice tone="warn">
+          초안({draftSource}) 코딩 {unreviewed}건이 아직 확인되지 않았습니다. 각 Claim 의 값을 검토하고 필요하면 수정한 뒤 <b>확인 후 저장</b>을 누르세요. 모두 확인해야 확정할 수 있습니다.
+        </Notice>
+      )}
       {referenceEvents.length === 0 && <Notice tone="warn">이 영상에 Reference Event 가 없습니다. 먼저 Reference Annotation 을 작성하세요.</Notice>}
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -96,11 +105,14 @@ export default async function CodingWorkspacePage({ params }: { params: Promise<
         <div className="space-y-4">
           {claims.map((c) => {
             const k = c.coding;
+            const draft = isDraft(k);
             return (
-              <div key={c.id} className={`rounded-lg border p-3 ${k ? "border-emerald-200" : "border-amber-300"}`}>
+              <div key={c.id} className={`rounded-lg border p-3 ${draft ? "border-amber-400 bg-amber-50/40" : k ? "border-emerald-200" : "border-amber-300"}`}>
                 <div className="flex items-start justify-between gap-3">
                   <p className="text-sm">
                     <span className="mr-2 font-mono text-xs text-muted-foreground">#{c.claim_order}</span>
+                    {draft && <span className="mr-2 rounded bg-amber-200 px-1.5 py-0.5 text-xs font-medium text-amber-900">초안 · 미확인</span>}
+                    {k?.draft_source && k.reviewed_at && <span className="mr-2 rounded bg-emerald-100 px-1.5 py-0.5 text-xs font-medium text-emerald-800">확인됨</span>}
                     {c.claim_text}
                     {c.char_start !== null && <span className="ml-2 font-mono text-xs text-muted-foreground">[{c.char_start}–{c.char_end}]</span>}
                   </p>
@@ -121,7 +133,7 @@ export default async function CodingWorkspacePage({ params }: { params: Promise<
                     </div>
                   )}
                 </div>
-                <ActionForm action={codeClaimAction} submitLabel={k ? "코딩 갱신" : "코딩 저장"} className="mt-3">
+                <ActionForm action={codeClaimAction} submitLabel={draft ? "확인 후 저장" : k ? "코딩 갱신" : "코딩 저장"} className="mt-3">
                   <input type="hidden" name="session_id" value={session.id} />
                   <input type="hidden" name="claim_id" value={c.id} />
                   <div className="grid gap-2 md:grid-cols-3">
@@ -176,6 +188,7 @@ export default async function CodingWorkspacePage({ params }: { params: Promise<
       </Section>
 
       <Section title="세션">
+        {open && unreviewed > 0 && <p className="mb-2 text-sm text-amber-800">미확인 초안 {unreviewed}건을 모두 확인 후 저장해야 확정할 수 있습니다.</p>}
         <ActionForm action={sessionStatusAction} submitLabel={open ? "코딩 확정 (finalize)" : "다시 열기"} confirm={open ? "모든 Claim 코딩을 확정할까요? 확정 후 분석 지표에 반영됩니다." : undefined}>
           <input type="hidden" name="session_id" value={session.id} />
           <input type="hidden" name="status" value={open ? "finalized" : "open"} />

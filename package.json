@@ -22,7 +22,8 @@
     "seed:test": "tsx scripts/seed-test-study.ts",
     "create:admin": "tsx scripts/create-admin.ts",
     "make:test-video": "tsx scripts/make-test-video.ts",
-    "videos:probe": "tsx scripts/probe-video-audio.ts"
+    "videos:probe": "tsx scripts/probe-video-audio.ts",
+    "coding:drafts": "tsx scripts/import-coding-drafts.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

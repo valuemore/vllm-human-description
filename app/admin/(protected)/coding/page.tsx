@@ -58,8 +58,11 @@ export default async function CodingIndexPage({ searchParams }: { searchParams: 
         <button className="rounded border px-3 py-1 hover:bg-muted">필터</button>
       </form>
 
+      {shown.some((s) => s.unreviewedDrafts > 0) && (
+        <Notice tone="info">초안이 생성된 세션이 있습니다. 세션을 열어 각 Claim 의 초안값을 확인·수정 후 저장하세요. 모든 Claim 이 확인되어야 확정할 수 있습니다. 미확인 초안 {shown.reduce((n, s) => n + s.unreviewedDrafts, 0)}건.</Notice>
+      )}
       <Section title={`코딩 대상 (${shown.length})`}>
-        <Table head={["영상", "출처", "라벨", "글자", "내 세션", "Claim", "다른 코더", ""]}>
+        <Table head={["영상", "출처", "라벨", "글자", "내 세션", "Claim", "미확인 초안", "다른 코더", ""]}>
           {shown.map((s) => (
             <tr key={`${s.source_type}-${s.source_record_id}`}>
               <Td mono>{s.video_code}</Td>
@@ -68,6 +71,7 @@ export default async function CodingIndexPage({ searchParams }: { searchParams: 
               <Td mono>{s.character_count}</Td>
               <Td>{s.session ? <StatusBadge status={s.session.status === "finalized" ? "submitted" : "in_progress"} /> : <span className="text-muted-foreground">—</span>}</Td>
               <Td mono>{s.claimCount}</Td>
+              <Td mono>{s.unreviewedDrafts > 0 ? <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-900">{s.unreviewedDrafts}</span> : s.session ? "0" : "—"}</Td>
               <Td mono>{s.otherCoders}</Td>
               <Td>
                 <form action={openSessionAction}>

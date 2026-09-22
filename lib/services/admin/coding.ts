@@ -1,6 +1,7 @@
 import "server-only";
 import { getServiceClient } from "@/lib/db/service-client";
 import { AppError, fromDbError } from "@/lib/errors";
+import { countUnreviewedDrafts } from "@/lib/coding/draftClaims";
 import { recordAudit } from "@/lib/services/admin/audit";
 import type { Database } from "@/types/database";
 
@@ -18,15 +19,27 @@ export async function listSources(studyId: string, coderId: string, videoId?: st
   ]);
   if (error) throw fromDbError(error);
   const claimCounts = new Map<string, number>();
+  const unreviewedCounts = new Map<string, number>();
   const ids = (sessions ?? []).map((s) => s.id);
   if (ids.length) {
-    const { data: claims } = await sb.from("response_claims").select("coding_session_id").in("coding_session_id", ids);
-    for (const c of claims ?? []) claimCounts.set(c.coding_session_id, (claimCounts.get(c.coding_session_id) ?? 0) + 1);
+    const { data: claims } = await sb.from("response_claims").select("id, coding_session_id").in("coding_session_id", ids);
+    const sessionByClaim = new Map<string, string>();
+    for (const c of claims ?? []) {
+      claimCounts.set(c.coding_session_id, (claimCounts.get(c.coding_session_id) ?? 0) + 1);
+      sessionByClaim.set(c.id, c.coding_session_id);
+    }
+    if (sessionByClaim.size) {
+      const { data: drafts } = await sb.from("claim_codings").select("claim_id").eq("coder_id", coderId).not("draft_source", "is", null).is("reviewed_at", null).in("claim_id", [...sessionByClaim.keys()]);
+      for (const d of drafts ?? []) {
+        const sid = sessionByClaim.get(d.claim_id);
+        if (sid) unreviewedCounts.set(sid, (unreviewedCounts.get(sid) ?? 0) + 1);
+      }
+    }
   }
   return (sources ?? []).map((s) => {
     const mine = (sessions ?? []).find((x) => x.source_type === s.source_type && x.source_record_id === s.source_record_id && x.coder_id === coderId);
     const others = (sessions ?? []).filter((x) => x.source_type === s.source_type && x.source_record_id === s.source_record_id && x.coder_id !== coderId);
-    return { ...s, session: mine ?? null, claimCount: mine ? (claimCounts.get(mine.id) ?? 0) : 0, otherCoders: others.length };
+    return { ...s, session: mine ?? null, claimCount: mine ? (claimCounts.get(mine.id) ?? 0) : 0, unreviewedDrafts: mine ? (unreviewedCounts.get(mine.id) ?? 0) : 0, otherCoders: others.length };
   });
 }
 
@@ -159,6 +172,7 @@ export async function upsertCoding(claimId: string, coderId: string, input: Codi
     temporal_accuracy: input.temporalAccuracy,
     granularity_score: input.granularityScore,
     notes: input.notes,
+    reviewed_at: new Date().toISOString(),
   };
   const { data, error } = existing
     ? await sb.from("claim_codings").update(row).eq("id", existing.id).select("id").single()
@@ -174,8 +188,11 @@ export async function setSessionStatus(sessionId: string, status: "open" | "fina
     const { data: session } = await sb.from("coding_sessions").select("coder_id").eq("id", sessionId).single();
     const ids = (claims ?? []).map((c) => c.id);
     if (ids.length === 0) throw new AppError("VALIDATION", "Claim 이 없어 확정할 수 없습니다");
-    const { count } = await sb.from("claim_codings").select("id", { count: "exact", head: true }).in("claim_id", ids).eq("coder_id", session!.coder_id);
-    if ((count ?? 0) < ids.length) throw new AppError("VALIDATION", `코딩되지 않은 Claim 이 ${ids.length - (count ?? 0)}개 있습니다`);
+    const { data: codings } = await sb.from("claim_codings").select("id, draft_source, reviewed_at").in("claim_id", ids).eq("coder_id", session!.coder_id);
+    const count = codings?.length ?? 0;
+    if (count < ids.length) throw new AppError("VALIDATION", `코딩되지 않은 Claim 이 ${ids.length - count}개 있습니다`);
+    const unreviewed = countUnreviewedDrafts(codings ?? []);
+    if (unreviewed > 0) throw new AppError("VALIDATION", `확인되지 않은 초안 코딩이 ${unreviewed}개 있습니다. 각 Claim 을 확인 후 저장하세요`);
   }
   const { error } = await sb.from("coding_sessions").update({ status, finalized_at: status === "finalized" ? new Date().toISOString() : null, notes }).eq("id", sessionId);
   if (error) throw fromDbError(error);

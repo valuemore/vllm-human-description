@@ -102,6 +102,20 @@ Supabase 대시보드에서 확인할 것:
 - AI run 15건은 영상당 `gemini-2.5-pro(observe v2)`, `claude-fable-5(observe v3)`, `gemini-2.5-pro(observe v4)` 로, 동일 조건 반복이 아니라 **모델×프롬프트 조건 3종**이다. 분석에서 "AI" 를 단일 조건으로 합치지 말고 run(모델·프롬프트 버전)을 요인으로 다룬다.
 - export 의 `response_claims` 에 T01-V01 코딩 시험 세션(미확정, claim 3건)이 남아 있다. 확정되지 않았으므로 지표에 반영되지 않는다.
 - 영상 `title_admin` 이 아직 placeholder 다. 코딩 착수 전 `/admin/videos` 에서 실제 제목으로 정리.
+- **교사 원문 간 높은 유사도 (초안 작성 중 발견, 2026-09-22)**: T07·T09·T11·T12·T13 은 5개 영상 모두에서 서로 60–84% 유사한 문안(difflib ratio)이고 T06·T08·T10 도 한 묶음이다. 같은 오류(V01 의 공을 "블록"으로 기술)를 공유해 공통 출처(템플릿·생성 도구) 가능성이 있다. 독립 관찰 가정에 영향을 주므로 연구자가 확인하고 처리 방침(유지·민감도 분석·제외)을 기록한다.
+- T06 의 V02 기록은 V01 내용(반죽, 손 잡고 걷기)을 담고 있어 영상 착오로 보인다(초안은 hallucination 처리).
+- Reference 누락 후보: V05 "굴러간 양배추를 따라가 다시 잡는다"(교사 9명 공통), V02 "냄비에서 블록 붓기". Reference 를 보완하면 해당 초안을 재검토한다.
+- 2026-09-22 초안 가져오기 완료: 111 세션 / 561 Claim (`claude-fable-5-1/draft-v1`). V01-T02 는 기존 Claim 1개가 있어 건너뜀.
+
+### 4.3 Claim Coding 초안 워크플로 (마이그레이션 0011, 2026-09-22 연구자 지시)
+
+연구자가 115건(0자 3건 제외 시 112건)을 처음부터 코딩하는 대신, 사전 생성된 초안을 화면에서 **확인·수정 후 저장**한다.
+
+- 초안 생성: 원문(교사 기록·AI 기술문)과 Reference Events 를 텍스트로만 읽고 Claim 분할·코딩값을 작성한다(영상은 보지 않으며 Reference 가 유일한 기준). 지침은 `docs/CODING_DRAFT_RUBRIC.md`, 결과 파일은 `scratch/coding-drafts/drafts.json`(git 제외, 오프라인 보관). 연구 영상을 외부 API 로 보내지 않는다.
+- 가져오기: `npm run coding:drafts -- --file scratch/coding-drafts/drafts.json --source "claude-fable-5-1/draft-v1" [--dry-run]`. 코더(기본 `SEED_ADMIN_EMAIL`)의 세션을 열고 Claim 을 원문 verbatim 위치와 함께 만든 뒤, 코딩 행을 `draft_source`·`draft_values`(초안 원본 스냅샷)·`reviewed_at = null` 로 생성한다. 이미 Claim 이 있는 세션은 건너뛴다. 원문·Reference·기존 코딩은 수정하지 않는다.
+- 확인: `/admin/coding` 목록의 "미확인 초안" 열 → 세션 열기 → Claim 마다 값(support_type·대응 Event·정확성·granularity·메모 `[초안] 근거`)을 검토·수정 → **확인 후 저장**(`reviewed_at` 기록, `draft_values` 는 보존). 모든 Claim 이 확인되어야 확정(finalize)할 수 있다(서비스 검증 + DB 트리거 `coding_sessions_guard_drafts`).
+- 지표는 finalized 세션만 사용하므로 미확인 초안은 분석에 반영되지 않는다. export `claim_codings` 의 `draft_source`·`draft_values`·`reviewed_at`·`draft_changed` 로 초안-확정 일치율을 산출할 수 있다.
+- 방법론 주의: 초안은 코더 판단의 앵커가 될 수 있고, 비교 대상 AI(claude-fable-5) 기술문의 초안도 같은 계열 모델이 작성했다. 논문에는 "초안을 AI 가 작성하고 연구자가 전수 검토·확정" 했음과 초안 수정률을 보고한다. 필요하면 제2코더가 초안 없이 독립 코딩해 일치도를 산출한다(코딩 세션은 코더별로 분리됨).
 
 ## 5. Definition of Done 체크리스트 (PRD §56)
 
